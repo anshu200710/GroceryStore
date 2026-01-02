@@ -18,10 +18,20 @@ export const addProduct = async (req, res) => {
     const productData = JSON.parse(req.body.productData);
     const files = req.files || [];
 
+    console.log("Files received:", files.length);
+    console.log("First file structure:", files[0]);
+
+    if (!files.length) {
+      return res.status(400).json({ success: false, message: "No files uploaded" });
+    }
+
     const imagesUrl = await Promise.all(
       files.map(file => {
         return new Promise((resolve, reject) => {
-          const stream = Cloudinary.uploader.upload_stream(
+          if (!file.buffer) {
+            return reject(new Error("File buffer is undefined"));
+          }
+          const stream = cloudinary.uploader.upload_stream(
             { resource_type: "image" },
             (error, result) => {
               if (error) return reject(error);
@@ -181,7 +191,7 @@ export const deleteProduct = asyncHandler(async (req, res, next) => {
             })
         );
     } catch (error) {
-        console.error("Cloudinary deletion error:", error.message);
+        console.error("cloudinary deletion error:", error.message);
     }
 
     await Product.findByIdAndDelete(id);
