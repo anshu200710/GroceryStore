@@ -3,28 +3,34 @@ import { v2 as cloudinary } from "cloudinary";
 import Product from "../models/Product.js";
 import CustomError from "../utils/CustomError.js";
 import { productValidationSchema } from "./../utils/productValidation.js";
-
-//! Add Product: /api/product/add
-import multer from "multer";
 import { Readable } from "stream";
 
-// Multer memory storage
-const storage = multer.memoryStorage();
-export const upload = multer({ storage });
+//! Add Product: /api/product/add
 
-// Upload endpoint
-export const addProduct = async (req, res) => {
+export const addProduct = asyncHandler(async (req, res, next) => {
+  const files = req.files || [];
+
+  if (!files.length) {
+    return next(new CustomError(400, "No files uploaded"));
+  }
+
+  let productData;
   try {
-    const productData = JSON.parse(req.body.productData);
-    const files = req.files || [];
+    productData = JSON.parse(req.body.productData);
+  } catch (err) {
+    return next(new CustomError(400, "Invalid JSON format in 'productData'"));
+  }
 
-    console.log("Files received:", files.length);
-    console.log("First file structure:", files[0]);
+  const { error } = productValidationSchema.validate(productData, {
+    convert: true,
+  });
 
-    if (!files.length) {
-      return res.status(400).json({ success: false, message: "No files uploaded" });
-    }
+  if (error) {
+    const message = `The field '${error.details[0].context.key}' is missing or invalid. Please provide a valid value.`;
+    return next(new CustomError(400, message));
+  }
 
+  try {
     const imagesUrl = await Promise.all(
       files.map(file => {
         return new Promise((resolve, reject) => {
@@ -45,15 +51,18 @@ export const addProduct = async (req, res) => {
 
     const newProduct = await Product.create({
       ...productData,
-      image: imagesUrl
+      image: imagesUrl,
     });
 
-    res.status(201).json({ success: true, newProduct });
+    res.status(201).json({
+      success: true,
+      message: "Product added successfully",
+      newProduct,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    next(new CustomError(500, err.message || "Error adding product"));
   }
-};
+});
 
 
 // export const addProduct = asyncHandler(async (req, res, next) => {
