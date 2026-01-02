@@ -12,7 +12,7 @@ const SellerLogin = () => {
         try {
             event.preventDefault();
             setLoading(true);
-            const { data } = await axios.post("/api/user/login", {
+            const { data } = await axios.post("https://groceries.vyaapaarniti.com/api/user/login", {
                 email,
                 password,
             });

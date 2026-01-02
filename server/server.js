@@ -34,7 +34,10 @@ await connectCloudinary();
 //   credentials: true, // needed for cookies/auth
 // }));
 
-app.use(cors())
+app.use(cors({
+  origin: ["https://shop.vyaapaarniti.com", "http://localhost:5173"], // Add your shop URL here
+  credentials: true
+}));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
