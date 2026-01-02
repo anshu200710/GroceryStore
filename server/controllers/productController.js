@@ -5,64 +5,104 @@ import CustomError from "../utils/CustomError.js";
 import { productValidationSchema } from "./../utils/productValidation.js";
 
 //! Add Product: /api/product/add
+import multer from "multer";
+import { Readable } from "stream";
 
-export const addProduct = asyncHandler(async (req, res, next) => {
-    let productData;
+// Multer memory storage
+const storage = multer.memoryStorage();
+export const upload = multer({ storage });
 
-    try {
-        productData = JSON.parse(req.body.productData);
-    } catch (err) {
-        throw new CustomError(400, "Invalid JSON format in 'productData'");
-    }
+// Upload endpoint
+export const addProduct = async (req, res) => {
+  try {
+    const productData = JSON.parse(req.body.productData);
+    const files = req.files || [];
 
-    const { error } = productValidationSchema.validate(productData, {
-        convert: true,
-    });
-
-    if (error) {
-        const message = `The field '${error.details[0].context.key}' is missing or invalid. Please provide a valid value.`;
-        return next(new CustomError(400, message));
-    }
-
-    // const images = req.files;
-
-    // let imagesUrl = await Promise.all(
-    //     images.map(async (item) => {
-    //         let result = await cloudinary.uploader.upload(item.path, {
-    //             resource_type: "image",
-    //         });
-    //         return result.secure_url;
-    //     })
-    // );
-
-    const images = req.files || [];
-    console.log("req.files:", req.files);
- // fallback to empty array
-
-    let imagesUrl = [];
-    if (images.length > 0) {
-        imagesUrl = await Promise.all(
-            images.map(async (item) => {
-                let result = await cloudinary.uploader.upload(item.path, {
-                    resource_type: "image",
-                });
-                return result.secure_url;
-            })
-        );
-    }
-
+    const imagesUrl = await Promise.all(
+      files.map(file => {
+        return new Promise((resolve, reject) => {
+          const stream = Cloudinary.uploader.upload_stream(
+            { resource_type: "image" },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result.secure_url);
+            }
+          );
+          Readable.from(file.buffer).pipe(stream);
+        });
+      })
+    );
 
     const newProduct = await Product.create({
-        ...productData,
-        image: imagesUrl,
+      ...productData,
+      image: imagesUrl
     });
 
-    res.status(201).json({
-        success: true,
-        message: "Product added successfully",
-        newProduct,
-    });
-});
+    res.status(201).json({ success: true, newProduct });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+
+// export const addProduct = asyncHandler(async (req, res, next) => {
+//     let productData;
+
+//     try {
+//         productData = JSON.parse(req.body.productData);
+//     } catch (err) {
+//         throw new CustomError(400, "Invalid JSON format in 'productData'");
+//     }
+
+//     const { error } = productValidationSchema.validate(productData, {
+//         convert: true,
+//     });
+
+//     if (error) {
+//         const message = `The field '${error.details[0].context.key}' is missing or invalid. Please provide a valid value.`;
+//         return next(new CustomError(400, message));
+//     }
+
+//     // const images = req.files;
+
+//     // let imagesUrl = await Promise.all(
+//     //     images.map(async (item) => {
+//     //         let result = await cloudinary.uploader.upload(item.path, {
+//     //             resource_type: "image",
+//     //         });
+//     //         return result.secure_url;
+//     //     })
+//     // );
+
+//     const images = req.files || [];
+//     console.log("req.files:", req.files);
+//  // fallback to empty array
+
+//     let imagesUrl = [];
+//     if (images.length > 0) {
+//         imagesUrl = await Promise.all(
+//             images.map(async (item) => {
+//                 let result = await cloudinary.uploader.upload(item.path, {
+//                     resource_type: "image",
+//                 });
+//                 return result.secure_url;
+//             })
+//         );
+//     }
+
+
+//     const newProduct = await Product.create({
+//         ...productData,
+//         image: imagesUrl,
+//     });
+
+//     res.status(201).json({
+//         success: true,
+//         message: "Product added successfully",
+//         newProduct,
+//     });
+// });
 
 //! Get All Product: /api/product/list
 
