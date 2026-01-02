@@ -57,7 +57,7 @@ import { Link } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_BACKEND_URL
   ? `${import.meta.env.VITE_BACKEND_URL}/api`
-  : "http://localhost:5000/api";
+  : "https://groceries.vyaapaarniti.com";
 
 const FILE_BASE = API_URL.replace(/\/api\/?$/, "");
 
