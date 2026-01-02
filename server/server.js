@@ -24,7 +24,15 @@ await connectDB();
 await connectCloudinary();
 
 // Middlewares
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+const allowedOrigins = [
+  "http://localhost:5173", // local dev
+  "https://grocery-store-red-two.vercel.app" // production frontend
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true, // needed for cookies/auth
+}));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
