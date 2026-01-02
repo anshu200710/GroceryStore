@@ -2,10 +2,6 @@
 
 Welcome to **GreenCart**! Your one-stop solution for shopping a wide range of fresh and daily essential grocery items. From organic produce to household staples, we've got everything you need in one place! 🥦🥫🍞
 
-## 🚀 Live Demo
-
-[![Live Demo](https://img.shields.io/badge/Live-Demo-28a745?style=for-the-badge&logo=vercel&logoColor=white)](https://greencart-8d9l.onrender.com/)
-
 ## 🛍️ Features
 
 ✅ **Browse & Search**: Easily explore a variety of grocery products 🌾
