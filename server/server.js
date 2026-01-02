@@ -12,7 +12,7 @@ import addressRouter from "./routes/addressRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import heroBannerRoutes from "./routes/heroBannerRoutes.js";
 
-import errorHandler from "./middlewares/errorMiddleware.js";
+// import errorHandler from "./middlewares/errorMiddleware.js";
 
 import { PORT } from "./config/index.js";
 
@@ -44,7 +44,7 @@ app.use("/api/order", orderRouter);
 app.use("/api/hero-banners", heroBannerRoutes);
 
 // Error middleware
-app.use(errorHandler);
+// app.use(errorHandler);
 
 // Start server
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
