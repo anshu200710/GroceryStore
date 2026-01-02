@@ -4,53 +4,47 @@ import cors from "cors";
 import morgan from "morgan";
 import connectDB from "./config/db.js";
 import connectCloudinary from "./config/cloudinary.js";
+
 import userRouter from "./routes/userRoute.js";
 import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import addressRouter from "./routes/addressRoute.js";
 import orderRouter from "./routes/orderRoute.js";
+import heroBannerRoutes from "./routes/heroBannerRoutes.js";
+
 import errorHandler from "./middlewares/errorMiddleware.js";
-import { stripeWebhooks } from "./controllers/orderController.js";
+
 import { PORT } from "./config/index.js";
 
 const app = express();
-const port = PORT 
+const port = PORT;
 
+// Connect DB & Cloudinary
 await connectDB();
 await connectCloudinary();
-app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-}));
-
-app.use(cookieParser());
-app.use(express.json());
-app.use(morgan("dev"));
-
-
-
-// Allow multiple origins
-// const allowedOrigins = ["https://greencart-8d9l.onrender.com"];
-
-app.post("/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
 // Middlewares
-// app.use(morgan("dev"));
-// app.use(express.json());
-// app.use(cookieParser());
-// app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cookieParser());
+app.use(morgan("dev"));
 
+// JSON parsing for non-file requests
+app.use(express.json());
+
+// Serve uploads folder
+app.use("/uploads", express.static("uploads"));
+
+// Routes
 app.get("/", (req, res) => res.send("API is Working"));
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/address", addressRouter);
 app.use("/api/order", orderRouter);
+app.use("/api/hero-banners", heroBannerRoutes);
 
+// Error middleware
 app.use(errorHandler);
 
-app.listen(port, () => {
-    console.log(
-        `Server running on http://localhost:${port}`
-    );
-});
+// Start server
+app.listen(port, () => console.log(`Server running on http://localhost:${port}`));

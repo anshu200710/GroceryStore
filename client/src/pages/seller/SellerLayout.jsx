@@ -17,6 +17,7 @@ const SellerLayout = () => {
             icon: assets.product_list_icon,
         },
         { name: "Orders", path: "/seller/orders", icon: assets.order_icon },
+        { name: "Hero Banners", path: "/seller/hero-banners", icon: assets.box_icon },
     ];
 
     const logout = async () => {

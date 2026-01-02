@@ -34,7 +34,11 @@ const AddProduct = () => {
                 formData.append("images", files[i]);
             }
 
-            const { data } = await axios.post("/api/product/add", formData);
+            const { data } = await axios.post("/api/product/add", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
 
             if (data.success) {
                 toast.success(data.message);
@@ -86,8 +90,8 @@ const AddProduct = () => {
                                         src={
                                             files[index]
                                                 ? URL.createObjectURL(
-                                                      files[index]
-                                                  )
+                                                    files[index]
+                                                )
                                                 : assets.upload_area
                                         }
                                         alt="uploadArea"
@@ -186,9 +190,8 @@ const AddProduct = () => {
                     </div>
                 </div>
                 <button
-                    className={`px-8 py-2.5 bg-primary text-white font-medium rounded cursor-pointer ${
-                        loading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className={`px-8 py-2.5 bg-primary text-white font-medium rounded cursor-pointer ${loading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
                     disabled={loading}
                 >
                     {loading ? "Adding..." : "ADD"}
