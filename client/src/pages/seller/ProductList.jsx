@@ -10,6 +10,16 @@ const ProductList = () => {
     const [selectedProductId, setSelectedProductId] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Filter states
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("all");
+    const [selectedStock, setSelectedStock] = useState("all");
+
+    // Get unique categories from products
+    const categories = [
+        ...new Set(products.map((product) => product.category)),
+    ];
+
     const toggleStock = async (id, inStock) => {
         try {
             const { data } = await axios.patch(`/api/product/${id}`, {
@@ -57,6 +67,41 @@ const ProductList = () => {
             <div className="w-full md:p-10 p-4">
                 <h2 className="pb-4 text-lg font-medium">All Products</h2>
 
+                {/* Search and Filter Controls */}
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                    {/* Search Bar */}
+                    <input
+                        type="text"
+                        placeholder="Search by product name..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="border border-gray-300 rounded px-3 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {/* Category Dropdown */}
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="border border-gray-300 rounded px-3 py-2 w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="all">All Categories</option>
+                        {categories.map((cat) => (
+                            <option key={cat} value={cat}>
+                                {cat}
+                            </option>
+                        ))}
+                    </select>
+                    {/* In Stock Dropdown */}
+                    <select
+                        value={selectedStock}
+                        onChange={(e) => setSelectedStock(e.target.value)}
+                        className="border border-gray-300 rounded px-3 py-2 w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="all">All</option>
+                        <option value="in">In Stock</option>
+                        <option value="out">Out of Stock</option>
+                    </select>
+                </div>
+
                 {isProductsLoading ? (
                     <div className="w-full bg-white border border-gray-300 rounded-md p-6 text-center text-gray-600">
                         Loading products...
@@ -67,108 +112,144 @@ const ProductList = () => {
                     </div>
                 ) : (
                     <>
-                        {/* Product Table */}
-                        <div className="w-full overflow-x-auto bg-white border border-gray-300 rounded-md">
-                            <table className="min-w-full text-sm text-left text-gray-700">
-                                <thead className="bg-gray-100 text-gray-900">
-                                    <tr>
-                                        <th className="px-4 py-3 font-semibold whitespace-nowrap">
-                                            Product
-                                        </th>
-                                        <th className="px-4 py-3 font-semibold whitespace-nowrap">
-                                            Category
-                                        </th>
-                                        <th className="px-4 py-3 font-semibold whitespace-nowrap hidden md:table-cell">
-                                            Selling Price
-                                        </th>
-                                        <th className="px-4 py-3 font-semibold whitespace-nowrap">
-                                            In Stock
-                                        </th>
-                                        <th className="px-4 py-3 font-semibold whitespace-nowrap hidden sm:table-cell">
-                                            Delete
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {products.map((product) => (
-                                        <tr key={product._id}>
-                                            <td className="px-4 py-3 flex items-center space-x-3 min-w-[200px]">
-                                                <div className="border border-gray-300 rounded p-1">
-                                                    <img
-                                                        src={product.image[0]}
-                                                        alt="Product"
-                                                        className="w-12 h-12 object-cover"
-                                                    />
-                                                </div>
-                                                <span className="truncate max-w-[150px] sm:max-w-xs">
-                                                    {product.name}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                {product.category}
-                                            </td>
-                                            <td className="px-4 py-3 hidden md:table-cell whitespace-nowrap">
-                                                {currency}
-                                                {product.offerPrice}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <label className="relative inline-flex items-center cursor-pointer">
-                                                    <input
-                                                        onChange={() =>
-                                                            toggleStock(
-                                                                product._id,
-                                                                !product.inStock
-                                                            )
-                                                        }
-                                                        checked={
-                                                            product.inStock
-                                                        }
-                                                        type="checkbox"
-                                                        className="sr-only peer"
-                                                    />
-                                                    <div className="w-12 h-7 bg-slate-300 rounded-full peer peer-checked:bg-blue-600 transition-colors duration-200"></div>
-                                                    <span className="dot absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-5"></span>
-                                                </label>
-                                            </td>
-                                            <td className="px-4 py-3 hidden sm:table-cell">
-                                                <button
-                                                    onClick={() =>
-                                                        confirmDelete(
-                                                            product._id
-                                                        )
-                                                    }
-                                                    className="text-sm cursor-pointer px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        {/* Filter and display products */}
+                        {(() => {
+                            const q = searchTerm.trim().toLowerCase();
+                            const filtered = products.filter((p) => {
+                                // Search by name
+                                const nameMatch = p.name?.toLowerCase().includes(q);
 
-                        {/* Mobile Delete Buttons */}
-                        <div className="sm:hidden mt-4 space-y-2">
-                            {products.map((product) => (
-                                <div
-                                    key={product._id}
-                                    className="flex justify-between items-center px-4 py-2 border rounded shadow-sm"
-                                >
-                                    <span className="text-sm font-medium truncate">
-                                        {product.name}
-                                    </span>
-                                    <button
-                                        onClick={() =>
-                                            confirmDelete(product._id)
-                                        }
-                                        className="text-xs cursor-pointer px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                                // Filter by category
+                                const categoryMatch =
+                                    selectedCategory === "all" || p.category === selectedCategory;
+
+                                // Filter by stock
+                                const stockMatch =
+                                    selectedStock === "all" ||
+                                    (selectedStock === "in" && p.inStock) ||
+                                    (selectedStock === "out" && !p.inStock);
+
+                                // Search only applies if text entered, otherwise show all
+                                const searchMatch = q === "" || nameMatch;
+
+                                return categoryMatch && stockMatch && searchMatch;
+                            });
+
+                            return (
+                                <>
+                                    {filtered.length === 0 ? (
+                                        <div className="w-full bg-white border border-gray-300 rounded-md p-6 text-center text-gray-600">
+                                            No products match your filters.
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Product Table */}
+                                            <div className="w-full overflow-x-auto bg-white border border-gray-300 rounded-md">
+                                                <table className="min-w-full text-sm text-left text-gray-700">
+                                                    <thead className="bg-gray-100 text-gray-900">
+                                                        <tr>
+                                                            <th className="px-4 py-3 font-semibold whitespace-nowrap">
+                                                                Product
+                                                            </th>
+                                                            <th className="px-4 py-3 font-semibold whitespace-nowrap">
+                                                                Category
+                                                            </th>
+                                                            <th className="px-4 py-3 font-semibold whitespace-nowrap hidden md:table-cell">
+                                                                Selling Price
+                                                            </th>
+                                                            <th className="px-4 py-3 font-semibold whitespace-nowrap">
+                                                                In Stock
+                                                            </th>
+                                                            <th className="px-4 py-3 font-semibold whitespace-nowrap hidden sm:table-cell">
+                                                                Delete
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-200">
+                                                        {filtered.map((product) => (
+                                                            <tr key={product._id}>
+                                                                <td className="px-4 py-3 flex items-center space-x-3 min-w-[200px]">
+                                                                    <div className="border border-gray-300 rounded p-1">
+                                                                        <img
+                                                                            src={product.image[0]}
+                                                                            alt="Product"
+                                                                            className="w-12 h-12 object-cover"
+                                                                        />
+                                                                    </div>
+                                                                    <span className="truncate max-w-[150px] sm:max-w-xs">
+                                                                        {product.name}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                                    {product.category}
+                                                                </td>
+                                                                <td className="px-4 py-3 hidden md:table-cell whitespace-nowrap">
+                                                                    {currency}
+                                                                    {product.offerPrice}
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                                        <input
+                                                                            onChange={() =>
+                                                                                toggleStock(
+                                                                                    product._id,
+                                                                                    !product.inStock
+                                                                                )
+                                                                            }
+                                                                            checked={
+                                                                                product.inStock
+                                                                            }
+                                                                            type="checkbox"
+                                                                            className="sr-only peer"
+                                                                        />
+                                                                        <div className="w-12 h-7 bg-slate-300 rounded-full peer peer-checked:bg-blue-600 transition-colors duration-200"></div>
+                                                                        <span className="dot absolute left-1 top-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-5"></span>
+                                                                    </label>
+                                                                </td>
+                                                                <td className="px-4 py-3 hidden sm:table-cell">
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            confirmDelete(
+                                                                                product._id
+                                                                            )
+                                                                        }
+                                                                        className="text-sm cursor-pointer px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                                                    >
+                                                                        Delete
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {/* Mobile Delete Buttons */}
+                                            <div className="sm:hidden mt-4 space-y-2">
+                                                {filtered.map((product) => (
+                                                    <div
+                                                        key={product._id}
+                                                        className="flex justify-between items-center px-4 py-2 border rounded shadow-sm"
+                                                    >
+                                                        <span className="text-sm font-medium truncate">
+                                                            {product.name}
+                                                        </span>
+                                                        <button
+                                                            onClick={() =>
+                                                                confirmDelete(product._id)
+                                                            }
+                                                            className="text-xs cursor-pointer px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </>
                 )}
             </div>
