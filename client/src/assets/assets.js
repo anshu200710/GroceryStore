@@ -69,6 +69,21 @@ import vanilla_muffins_image from "./vanilla_muffins_image.png";
 import quinoa_image from "./quinoa_image.png";
 import brown_rice_image from "./brown_rice_image.png";
 import barley_image from "./barley_image.png";
+import snacks_image from "./snacks_image.png";
+import frozen_food_image from "./frozen_food_image.png";
+import meat_image from "./meat_image.png";
+import personal_care_image from "./personal_care_image.png";
+import household_image from "./household_image.png";
+import home_kitchen_image from "./home_kitchen_image.png";
+import mens_clothing_image from "./mens_clothing_image.jpg";
+import womens_clothing_image from "./womens_clothing_image.jpg";
+import kids_clothing_image from "./kids_clothing_image.jpg";
+import footwear_image from "./footwear_image.jpg";
+import baby_care_image from "./baby_care_image.png";
+import pet_supplies_image from "./pet_supplies_image.png";
+import electronics_image from "./electronics_image.png";
+import stationery_image from "./stationery_image.png";
+
 
 export const assets = {
   logo,
