@@ -102,7 +102,7 @@ export const assets = {
 
 export const categories = [
   {
-    text: "Organic veggies",
+    text: "Organic Veggies",
     path: "Vegetables",
     image: organic_vegitable_image,
     bgColor: "#FEF6DA",
@@ -114,22 +114,16 @@ export const categories = [
     bgColor: "#FEE0E0",
   },
   {
-    text: "Cold Drinks",
+    text: "Cold Drinks & Juices",
     path: "Drinks",
     image: bottles_image,
     bgColor: "#F0F5DE",
   },
   {
-    text: "Instant Food",
+    text: "Instant & Ready Food",
     path: "Instant",
     image: maggi_image,
     bgColor: "#E1F5EC",
-  },
-  {
-    text: "Dairy Products",
-    path: "Dairy",
-    image: dairy_product_image,
-    bgColor: "#FEE6CD",
   },
   {
     text: "Bakery & Breads",
@@ -143,7 +137,102 @@ export const categories = [
     image: grain_image,
     bgColor: "#F1E3F9",
   },
+
+  // 🍿 Food & Daily Needs
+  {
+    text: "Snacks & Munchies",
+    path: "Snacks",
+    image: snacks_image,
+    bgColor: "#FFF1D6",
+  },
+  {
+    text: "Frozen Foods",
+    path: "Frozen",
+    image: frozen_food_image,
+    bgColor: "#E6F7FF",
+  },
+  {
+    text: "Meat, Fish & Eggs",
+    path: "Meat",
+    image: meat_image,
+    bgColor: "#FDE2E2",
+  },
+
+  // 🧴 Lifestyle & Essentials
+  {
+    text: "Personal Care",
+    path: "Personal-Care",
+    image: personal_care_image,
+    bgColor: "#E8F0FE",
+  },
+  {
+    text: "Household Essentials",
+    path: "Household",
+    image: household_image,
+    bgColor: "#F3F4F6",
+  },
+  {
+    text: "Home & Kitchen",
+    path: "Home-Kitchen",
+    image: home_kitchen_image,
+    bgColor: "#FFF7E6",
+  },
+
+  // 👕 Clothing & Lifestyle (New)
+  {
+    text: "Men's Clothing",
+    path: "Mens-Clothing",
+    image: mens_clothing_image,
+    bgColor: "#EAF2FF",
+  },
+  {
+    text: "Women's Clothing",
+    path: "Womens-Clothing",
+    image: womens_clothing_image,
+    bgColor: "#FFEAF4",
+  },
+  {
+    text: "Kids Clothing",
+    path: "Kids-Clothing",
+    image: kids_clothing_image,
+    bgColor: "#FFF6E5",
+  },
+  {
+    text: "Footwear",
+    path: "Footwear",
+    image: footwear_image,
+    bgColor: "#E9F7EF",
+  },
+
+  // 👶 Baby & Pet
+  {
+    text: "Baby Care",
+    path: "Baby-Care",
+    image: baby_care_image,
+    bgColor: "#FFF0F6",
+  },
+  {
+    text: "Pet Supplies",
+    path: "Pet-Supplies",
+    image: pet_supplies_image,
+    bgColor: "#F0FFF4",
+  },
+
+  // 🔌 Electronics & Extras
+  {
+    text: "Electronics & Accessories",
+    path: "Electronics",
+    image: electronics_image,
+    bgColor: "#EEF2FF",
+  },
+  {
+    text: "Stationery & Office",
+    path: "Stationery",
+    image: stationery_image,
+    bgColor: "#F8FAFC",
+  },
 ];
+
 
 export const footerLinks = [
   {
