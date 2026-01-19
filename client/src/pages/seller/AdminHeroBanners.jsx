@@ -14,7 +14,7 @@ const AdminHeroBanners = () => {
   // Fetch all banners
   const fetchBanners = async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/hero-banners/all`);
+      const { data } = await axios.get(`${API_URL}/api/hero-banners/all`);
       setBanners(data || []);
     } catch (err) {
       console.error(err);
