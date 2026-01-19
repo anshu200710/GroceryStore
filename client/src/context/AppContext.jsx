@@ -25,10 +25,14 @@ export const AppContextProvider = ({ children }) => {
 
     const [isProductsLoading, setIsProductsLoading] = useState(true);
 
+    const API_URL = import.meta.env.VITE_BACKEND_URL
+  ? `${import.meta.env.VITE_BACKEND_URL}/api`
+  : "https://groceries.vyaapaarniti.com";
+
     const fetchProducts = async () => {
         try {
             setIsProductsLoading(true);
-            const { data } = await axios.get("https://groceries.vyaapaarniti.com/api/product/list");
+            const { data } = await axios.get(`${API_URL}/product/list`);
 
             if (data.success) {
                 setProducts(data.products);

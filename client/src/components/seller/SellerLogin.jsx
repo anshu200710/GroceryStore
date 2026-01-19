@@ -8,11 +8,16 @@ const SellerLogin = () => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const API_URL = import.meta.env.VITE_BACKEND_URL
+  ? `${import.meta.env.VITE_BACKEND_URL}/api`
+  : "https://groceries.vyaapaarniti.com";
+  
+
     const onSubmitHandler = async (event) => {
         try {
             event.preventDefault();
             setLoading(true);
-            const { data } = await axios.post("https://groceries.vyaapaarniti.com/api/user/login", {
+            const { data } = await axios.post(`${API_URL}/user/login`, {
                 email,
                 password,
             });
