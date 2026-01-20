@@ -15,7 +15,7 @@ const Orders = () => {
     const fetchOrders = async () => {
         try {
             setIsLoading(true);
-            const { data } = await axios.get("/api/order/seller");
+            const { data } = await axios.get("/order/seller");
 
             if (data.success) {
                 setOrders(data.orders);
@@ -38,7 +38,7 @@ const Orders = () => {
         setIsDeleting(true);
         try {
             const { data } = await axios.delete(
-                `/api/order/${selectedOrderId}`
+                `/order/${selectedOrderId}`
             );
             if (data.success) {
                 toast.success(data.message);
@@ -58,7 +58,7 @@ const Orders = () => {
 
     const handleStatusChange = async (orderId, newStatus) => {
         try {
-            const { data } = await axios.patch(`/api/order/${orderId}`, {
+            const { data } = await axios.patch(`/order/${orderId}`, {
                 status: newStatus,
             });
 

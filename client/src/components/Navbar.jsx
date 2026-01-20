@@ -27,7 +27,7 @@ const Navbar = () => {
         setLogoutLoading(true);
 
         try {
-            const { data } = await axios.delete("/api/user/logout");
+            const { data } = await axios.delete("/user/logout");
 
             if (data.success) {
                 toast.success(data.message);

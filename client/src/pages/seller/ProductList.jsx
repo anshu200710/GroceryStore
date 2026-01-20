@@ -22,7 +22,7 @@ const ProductList = () => {
 
     const toggleStock = async (id, inStock) => {
         try {
-            const { data } = await axios.patch(`/api/product/${id}`, {
+            const { data } = await axios.patch(`/product/${id}`, {
                 inStock,
             });
             if (data.success) {
@@ -46,7 +46,7 @@ const ProductList = () => {
         setIsDeleting(true);
         try {
             const { data } = await axios.delete(
-                `/api/product/${selectedProductId}`
+                `/product/${selectedProductId}`
             );
             if (data.success) {
                 toast.success(data.message);

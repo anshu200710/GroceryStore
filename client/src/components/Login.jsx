@@ -27,7 +27,7 @@ const Login = () => {
                     ? { email, password }
                     : { name, email, password };
 
-            const { data } = await axios.post(`/api/user/${state}`, payload);
+            const { data } = await axios.post(`/user/${state}`, payload);
 
             if (data.success) {
                 toast.success(
