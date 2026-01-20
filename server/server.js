@@ -24,24 +24,15 @@ await connectDB();
 await connectCloudinary();
 
 // Middlewares
-// const allowedOrigins = [
-//   "http://localhost:5173", // local dev
-//   "https://grocery-store-red-two.vercel.app" // production frontend
-// ];
+const allowedOrigins = [
+  "http://localhost:5173", // local dev
+  "https://grocery-store-red-two.vercel.app" // production frontend
+];
 
-// app.use(cors({
-//   origin: allowedOrigins,
-//   credentials: true, // needed for cookies/auth
-// }));
-
-// app.use(cors({
-//   origin: ["https://shop.vyaapaarniti.com", "http://localhost:5173"], // Add your shop URL here
-//   credentials: true
-// }));
-// app.use(cookieParser());
-// app.use(morgan("dev"));
-
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true, // needed for cookies/auth
+}));
 app.use(cookieParser());
 app.use(morgan("dev"));
 

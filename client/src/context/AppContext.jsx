@@ -5,7 +5,7 @@ import axios from "axios";
 
 axios.defaults.withCredentials = true;
 axios.defaults.headers.common["Content-Type"] = "application/json";
-axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
+axios.defaults.baseURL = `${import.meta.env.VITE_BACKEND_URL}/api`;
 
 export const AppContext = createContext();
 
@@ -32,7 +32,7 @@ export const AppContextProvider = ({ children }) => {
     const fetchProducts = async () => {
         try {
             setIsProductsLoading(true);
-            const { data } = await axios.get(`${API_URL}/product/list`);
+            const { data } = await axios.get("/product/list");
 
             if (data.success) {
                 setProducts(data.products);
@@ -48,7 +48,7 @@ export const AppContextProvider = ({ children }) => {
 
     const fetchUser = async () => {
         try {
-            const { data } = await axios.get("/api/user/me");
+            const { data } = await axios.get("/user/me");
 
             if (data.success) {
                 if (data.user.role === "user") {
@@ -76,7 +76,7 @@ export const AppContextProvider = ({ children }) => {
     useEffect(() => {
         const updateCart = async () => {
             try {
-                await axios.patch("/api/cart/update", {
+                await axios.patch("/cart/update", {
                     cartItems,
                 });
             } catch (error) {
