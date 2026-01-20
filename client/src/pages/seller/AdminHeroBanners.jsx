@@ -1,76 +1,32 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-const API_URL =
-  import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api` : "https://aromadaily.shop/api";
-const FILE_BASE = import.meta.env.VITE_BACKEND_URL || "https://aromadaily.shop";
+import { assets } from "../../assets/assets";
 
 const AdminHeroBanners = () => {
-  const [banners, setBanners] = useState([]);
+  const [banners, setBanners] = useState([
+    { _id: "1", desktopImageUrl: assets.main_banner_bg, mobileImageUrl: assets.main_banner_bg_sm },
+    { _id: "2", desktopImageUrl: assets.bottom_banner_image, mobileImageUrl: assets.bottom_banner_image_sm },
+  ]);
   const [desktop, setDesktop] = useState(null);
   const [mobile, setMobile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch all banners
+  // Fetch all banners (static from assets)
   const fetchBanners = async () => {
-    try {
-      const { data } = await axios.get(`${API_URL}/hero-banners/all`);
-      setBanners(data || []);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to fetch banners");
-    }
+    // Banners loaded from assets
   };
 
   useEffect(() => {
     fetchBanners();
   }, []);
 
-  // Add banner
+  // Add banner (disabled - using static assets)
   const addBanner = async (e) => {
-  e.preventDefault();
+    alert("Using static banners from assets folder");
+  };
 
-  if (!desktop && !mobile) {
-    alert("Select at least one image");
-    return;
-  }
-
-  const formData = new FormData();
-  if (desktop) formData.append("desktopBanner", desktop);
-  if (mobile) formData.append("mobileBanner", mobile);
-  formData.append("isActive", "true"); // must be string
-  formData.append("order", banners.length.toString());
-
-  try {
-    setLoading(true);
-    const { data } = await axios.post(`${API_URL}/hero-banners`, formData, {
-      headers: { "Content-Type": "multipart/form-data" }, // <-- add this
-      withCredentials: true,
-    });
-    setBanners((prev) => [data, ...prev]);
-    setDesktop(null);
-    setMobile(null);
-    e.target.reset();
-  } catch (err) {
-    console.error(err.response?.data || err);
-    alert("Upload failed");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // Delete banner
+  // Delete banner (disabled - using static assets)
   const deleteBanner = async (id) => {
-    if (!window.confirm("Delete banner?")) return;
-    try {
-      await axios.delete(`${API_URL}/hero-banners/${id}`, {
-        withCredentials: true,
-      });
-      setBanners((prev) => prev.filter((b) => b._id !== id));
-    } catch (err) {
-      alert("Delete failed");
-    }
+    alert("Cannot delete static banners");
   };
 
   return (
@@ -113,14 +69,14 @@ const AdminHeroBanners = () => {
           >
             {b.desktopImageUrl && (
               <img
-                src={`${FILE_BASE}${b.desktopImageUrl}`}
+                src={b.desktopImageUrl}
                 className="h-32 w-full object-cover rounded"
               />
             )}
 
             {b.mobileImageUrl && (
               <img
-                src={`${FILE_BASE}${b.mobileImageUrl}`}
+                src={b.mobileImageUrl}
                 className="h-32 w-full object-cover rounded"
               />
             )}
