@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const API_URL =
-  import.meta.env.VITE_API_URL || "https://groceries.vyaapaarniti.com";
-const FILE_BASE = API_URL.replace(/\/api\/?$/, "");
+  import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api` : "https://aromadaily.shop/api";
+const FILE_BASE = import.meta.env.VITE_BACKEND_URL || "https://aromadaily.shop";
 
 const AdminHeroBanners = () => {
   const [banners, setBanners] = useState([]);
@@ -14,7 +14,7 @@ const AdminHeroBanners = () => {
   // Fetch all banners
   const fetchBanners = async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/api/hero-banners/all`);
+      const { data } = await axios.get(`${API_URL}/hero-banners/all`);
       setBanners(data || []);
     } catch (err) {
       console.error(err);
