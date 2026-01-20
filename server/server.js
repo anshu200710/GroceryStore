@@ -26,7 +26,9 @@ await connectCloudinary();
 // Middlewares
 const allowedOrigins = [
   "http://localhost:5173", // local dev
-  "https://grocery-store-red-two.vercel.app" // production frontend
+  "https://grocery-store-red-two.vercel.app", // vercel frontend
+  "https://aromadaily.shop", // production frontend
+  "https://www.aromadaily.shop" // production frontend with www
 ];
 
 app.use(cors({
