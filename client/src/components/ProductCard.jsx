@@ -31,7 +31,7 @@ const ProductCard = ({ product }) => {
                     <p className="text-gray-700 font-medium text-lg truncate w-full">
                         {product.name}
                     </p>
-                    <div className="flex items-center gap-0.5">
+                    {/* <div className="flex items-center gap-0.5">
                         {Array(5)
                             .fill("")
                             .map((_, i) => (
@@ -47,7 +47,7 @@ const ProductCard = ({ product }) => {
                                 />
                             ))}
                         <p>({4})</p>
-                    </div>
+                    </div> */}
                     <div className="flex items-end justify-between mt-3">
                         <p className="md:text-xl text-base font-medium text-primary">
                             {currency}
