@@ -95,11 +95,11 @@ const MainBanner = () => {
   return (
     <div className="relative">
       <img
-        src={`${FILE_BASE}${banner.desktopImageUrl}`}
+        src={banner.desktopImageUrl}
         className="hidden md:block w-full"
       />
       <img
-        src={`${FILE_BASE}${banner.mobileImageUrl || banner.desktopImageUrl}`}
+        src={banner.mobileImageUrl || banner.desktopImageUrl}
         className="md:hidden w-full"
       />
       

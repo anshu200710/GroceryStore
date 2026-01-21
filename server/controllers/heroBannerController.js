@@ -116,13 +116,12 @@
 //   }
 // };
 import HeroBanner from "../models/HeroBanner.js";
+import { v2 as cloudinary } from "cloudinary";
+import { Readable } from "stream";
 
 // Create banner
 export const createHeroBanner = async (req, res) => {
   try {
-    console.log("REQ.BODY:", req.body);
-    console.log("REQ.FILES:", req.files);
-
     const desktopImage = req.files?.desktopBanner?.[0];
     const mobileImage = req.files?.mobileBanner?.[0];
 
@@ -130,21 +129,44 @@ export const createHeroBanner = async (req, res) => {
       return res.status(400).json({ message: "Upload desktop or mobile image" });
     }
 
-    // const banner = await HeroBanner.create({
-    //   desktopImageUrl: desktopImage ? `/uploads/${desktopImage.filename}` : null,
-    //   mobileImageUrl: mobileImage ? `/uploads/${mobileImage.filename}` : null,
-    //   isActive: req.body.isActive === "true", // convert string to boolean
-    //   order: parseInt(req.body.order) || 0,
-    // });
+    // Upload to Cloudinary
+    let desktopUrl = null;
+    let mobileUrl = null;
+
+    if (desktopImage) {
+      const desktopUpload = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "image" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          }
+        );
+        Readable.from(desktopImage.buffer).pipe(stream);
+      });
+      desktopUrl = desktopUpload;
+    }
+
+    if (mobileImage) {
+      const mobileUpload = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "image" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          }
+        );
+        Readable.from(mobileImage.buffer).pipe(stream);
+      });
+      mobileUrl = mobileUpload;
+    }
 
     const banner = await HeroBanner.create({
-      desktopImageUrl: desktopImage ? `/uploads/${desktopImage.filename}` : null,
-      mobileImageUrl: mobileImage ? `/uploads/${mobileImage.filename}` : null,
+      desktopImageUrl: desktopUrl,
+      mobileImageUrl: mobileUrl,
       isActive: req.body.isActive ?? true,
       order: req.body.order ?? 0,
     });
-
-
 
     res.status(201).json(banner);
   } catch (err) {
@@ -183,8 +205,33 @@ export const updateHeroBanner = async (req, res) => {
     const banner = await HeroBanner.findById(id);
     if (!banner) return res.status(404).json({ message: "Banner not found" });
 
-    if (req.files?.desktopBanner) banner.desktopImageUrl = `/uploads/${req.files.desktopBanner[0].filename}`;
-    if (req.files?.mobileBanner) banner.mobileImageUrl = `/uploads/${req.files.mobileBanner[0].filename}`;
+    if (req.files?.desktopBanner) {
+      const desktopUpload = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "image" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          }
+        );
+        Readable.from(req.files.desktopBanner[0].buffer).pipe(stream);
+      });
+      banner.desktopImageUrl = desktopUpload;
+    }
+
+    if (req.files?.mobileBanner) {
+      const mobileUpload = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "image" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          }
+        );
+        Readable.from(req.files.mobileBanner[0].buffer).pipe(stream);
+      });
+      banner.mobileImageUrl = mobileUpload;
+    }
 
     if (req.body.isActive !== undefined) banner.isActive = req.body.isActive;
     if (req.body.order !== undefined) banner.order = req.body.order;
