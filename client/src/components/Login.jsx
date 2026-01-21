@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useAppContext } from "../context/AppContext";
 
-const Login = () => {
+const Login = ({ setShowLogin, onLoginSuccess }) => {
     const {
         setShowUserLogin,
         setUser,
@@ -37,13 +37,24 @@ const Login = () => {
                 );
 
                 setUser(data.user);
-                setShowUserLogin(false);
-
-                setEmail("");
-                setPassword("");
-                setName("");
-                navigate(redirectPath || "/");
-                setRedirectPath("/");
+                
+                // If onLoginSuccess callback is provided, use it (for custom behavior)
+                if (onLoginSuccess) {
+                    onLoginSuccess();
+                } else {
+                    // Default behavior: close modal and navigate
+                    setShowUserLogin?.(false);
+                    setEmail("");
+                    setPassword("");
+                    setName("");
+                    navigate(redirectPath || "/");
+                    setRedirectPath("/");
+                }
+                
+                // Close the modal if setShowLogin is provided
+                if (setShowLogin) {
+                    setShowLogin(false);
+                }
             }
         } catch (error) {
             if (error.response && error.response.data) {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import { assets, dummyAddress } from "../assets/assets";
 import toast from "react-hot-toast";
+import Login from "../components/Login";
 
 const Cart = () => {
     const {
@@ -23,6 +24,7 @@ const Cart = () => {
     const [selectedAddress, setSelectedAddress] = useState(null);
     const [paymentOption, setPaymentOption] = useState("COD");
     const [loading, setLoading] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
 
     const getCart = () => {
         let tempArray = [];
@@ -118,9 +120,17 @@ const Cart = () => {
         }
     }, [user]);
 
-    return products.length > 0 && cartItems ? (
-        <div className="flex flex-col md:flex-row mt-16">
-            <div className="flex-1 max-w-4xl">
+    return (
+        <>
+            {showLoginModal && (
+                <Login 
+                    setShowLogin={setShowLoginModal} 
+                    onLoginSuccess={() => setShowLoginModal(false)}
+                />
+            )}
+            {products.length > 0 && cartItems ? (
+                <div className="flex flex-col md:flex-row mt-16">
+                    <div className="flex-1 max-w-4xl">
                 <h1 className="text-3xl font-medium mb-6">
                     Shopping Cart{" "}
                     <span className="text-sm text-primabg-primary">
@@ -272,7 +282,14 @@ const Cart = () => {
                                     </p>
                                 ))}
                                 <p
-                                    onClick={() => navigate("/add-address")}
+                                    onClick={() => {
+                                        if (!user) {
+                                            setShowLoginModal(true);
+                                            setShowAddress(false);
+                                        } else {
+                                            navigate("/add-address");
+                                        }
+                                    }}
                                     className="text-primabg-primary text-center cursor-pointer p-2 hover:bg-primary/10"
                                 >
                                     Add address
@@ -355,10 +372,12 @@ const Cart = () => {
                 )}
             </div>
         </div>
-    ) : (
-        <div className="mt-16 text-center text-gray-500">
-            Your cart is empty.
-        </div>
+            ) : (
+                <div className="mt-16 text-center text-gray-500">
+                    Your cart is empty.
+                </div>
+            )}
+        </>
     );
 };
 
