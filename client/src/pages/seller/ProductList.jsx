@@ -323,7 +323,7 @@ const ProductList = () => {
                                                                     </label>
                                                                 </td>
                                                                 <td className="px-4 py-3 hidden sm:table-cell">
-                                                                    <button
+                                                                    {/* <button
                                                                         onClick={() =>
                                                                             confirmDelete(
                                                                                 product._id
@@ -332,7 +332,7 @@ const ProductList = () => {
                                                                         className="text-sm cursor-pointer px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
                                                                     >
                                                                         Delete
-                                                                    </button>
+                                                                    </button> */}
                                                                 </td>
                                                             </tr>
                                                         ))}
