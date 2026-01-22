@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAppContext } from "../../context/AppContext";
+import { categories } from "../../assets/assets";
 import toast from "react-hot-toast";
 
 const ProductList = () => {
@@ -10,15 +11,27 @@ const ProductList = () => {
     const [selectedProductId, setSelectedProductId] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Edit states
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        name: "",
+        category: "",
+        price: "",
+        offerPrice: "",
+        description: "",
+        images: [],
+    });
+    const [newImages, setNewImages] = useState([]);
+
     // Filter states
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [selectedStock, setSelectedStock] = useState("all");
 
-    // Get unique categories from products
-    const categories = [
-        ...new Set(products.map((product) => product.category)),
-    ];
+    // Get category paths for dropdown
+    const categoryPaths = categories.map((cat) => cat.path);
 
     const toggleStock = async (id, inStock) => {
         try {
@@ -40,6 +53,106 @@ const ProductList = () => {
     const confirmDelete = (id) => {
         setSelectedProductId(id);
         setShowModal(true);
+    };
+
+    const openEditModal = (product) => {
+        setEditingProduct(product);
+        setEditFormData({
+            name: product.name,
+            category: product.category,
+            price: product.price || "",
+            offerPrice: product.offerPrice,
+            description: product.description?.join("\n") || "",
+            images: product.image || [],
+        });
+        setNewImages([]);
+        setShowEditModal(true);
+    };
+
+    const handleEditFormChange = (e) => {
+        const { name, value } = e.target;
+        setEditFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+        setNewImages((prev) => [...prev, ...files]);
+    };
+
+    const removeExistingImage = (index) => {
+        setEditFormData((prev) => ({
+            ...prev,
+            images: prev.images.filter((_, i) => i !== index),
+        }));
+    };
+
+    const removeNewImage = (index) => {
+        setNewImages((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleEditProduct = async () => {
+        if (!editFormData.name.trim()) {
+            toast.error("Product name is required");
+            return;
+        }
+        if (!editFormData.category.trim()) {
+            toast.error("Category is required");
+            return;
+        }
+        if (!editFormData.price || parseFloat(editFormData.price) <= 0) {
+            toast.error("Valid price is required");
+            return;
+        }
+        if (!editFormData.offerPrice || parseFloat(editFormData.offerPrice) <= 0) {
+            toast.error("Valid offer price is required");
+            return;
+        }
+
+        setIsEditing(true);
+        try {
+            const formData = new FormData();
+            formData.append("name", editFormData.name);
+            formData.append("category", editFormData.category);
+            formData.append("price", editFormData.price);
+            formData.append("offerPrice", editFormData.offerPrice);
+            
+            // Convert description string to array
+            const descriptionArray = editFormData.description
+                .split("\n")
+                .filter((line) => line.trim() !== "");
+            formData.append("description", JSON.stringify(descriptionArray));
+            
+            // Append existing images
+            editFormData.images.forEach((img) => {
+                formData.append("existingImages", img);
+            });
+            
+            // Append new images
+            newImages.forEach((file) => {
+                formData.append("images", file);
+            });
+
+            const { data } = await axios.patch(`/product/${editingProduct._id}`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            if (data.success) {
+                toast.success(data.message);
+                fetchProducts();
+                setShowEditModal(false);
+                setEditingProduct(null);
+            }
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message || "Failed to update product"
+            );
+        } finally {
+            setIsEditing(false);
+        }
     };
 
     const handleDelete = async () => {
@@ -84,7 +197,7 @@ const ProductList = () => {
                         className="border border-gray-300 rounded px-3 py-2 w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="all">All Categories</option>
-                        {categories.map((cat) => (
+                        {categoryPaths.map((cat) => (
                             <option key={cat} value={cat}>
                                 {cat}
                             </option>
@@ -176,7 +289,10 @@ const ProductList = () => {
                                                                             className="w-12 h-12 object-cover"
                                                                         />
                                                                     </div>
-                                                                    <span className="truncate max-w-[150px] sm:max-w-xs">
+                                                                    <span 
+                                                                        className="truncate max-w-[150px] sm:max-w-xs cursor-pointer text-black hover:underline transition"
+                                                                        onClick={() => openEditModal(product)}
+                                                                    >
                                                                         {product.name}
                                                                     </span>
                                                                 </td>
@@ -253,6 +369,177 @@ const ProductList = () => {
                     </>
                 )}
             </div>
+
+            {/* Edit Modal */}
+            {showEditModal && editingProduct && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-lg">
+                        <div className="sticky top-0 bg-white border-b p-6">
+                            <h3 className="text-lg font-semibold text-gray-800">
+                                Edit Product
+                            </h3>
+                        </div>
+                        
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Product Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={editFormData.name}
+                                    onChange={handleEditFormChange}
+                                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Category
+                                </label>
+                                <select
+                                    name="category"
+                                    value={editFormData.category}
+                                    onChange={handleEditFormChange}
+                                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">Select a category</option>
+                                    {categoryPaths.map((cat) => (
+                                        <option key={cat} value={cat}>
+                                            {cat}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Product Price
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        value={editFormData.price}
+                                        onChange={handleEditFormChange}
+                                        step="0.01"
+                                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Offer Price
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="offerPrice"
+                                        value={editFormData.offerPrice}
+                                        onChange={handleEditFormChange}
+                                        step="0.01"
+                                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Description (one per line)
+                                </label>
+                                <textarea
+                                    name="description"
+                                    value={editFormData.description}
+                                    onChange={handleEditFormChange}
+                                    rows="4"
+                                    placeholder="Enter each description point on a new line"
+                                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Product Images
+                                </label>
+                                
+                                {/* Existing Images */}
+                                {editFormData.images.length > 0 && (
+                                    <div className="mb-4">
+                                        <p className="text-xs text-gray-600 mb-2">Current Images:</p>
+                                        <div className="flex flex-wrap gap-3">
+                                            {editFormData.images.map((img, index) => (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={img}
+                                                        alt={`Product ${index}`}
+                                                        className="w-16 h-16 object-cover border border-gray-300 rounded"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeExistingImage(index)}
+                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* New Images */}
+                                {newImages.length > 0 && (
+                                    <div className="mb-4">
+                                        <p className="text-xs text-gray-600 mb-2">New Images:</p>
+                                        <div className="flex flex-wrap gap-3">
+                                            {newImages.map((file, index) => (
+                                                <div key={index} className="relative">
+                                                    <img
+                                                        src={URL.createObjectURL(file)}
+                                                        alt={`New ${index}`}
+                                                        className="w-16 h-16 object-cover border border-gray-300 rounded"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeNewImage(index)}
+                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* File Input */}
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="w-full border border-gray-300 rounded px-3 py-2"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="sticky bottom-0 bg-white border-t p-6 flex justify-end gap-4">
+                            <button
+                                onClick={() => setShowEditModal(false)}
+                                className="px-4 py-2 cursor-pointer rounded-md border border-gray-300 hover:bg-gray-100 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleEditProduct}
+                                disabled={isEditing}
+                                className={`px-4 py-2 cursor-pointer rounded-md bg-blue-500 text-white transition ${
+                                    isEditing
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : "hover:bg-blue-600"
+                                }`}
+                            >
+                                {isEditing ? "Updating..." : "Update"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal */}
             {showModal && (

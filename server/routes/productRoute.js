@@ -7,6 +7,7 @@ import {
     deleteProduct,
     getProductById,
     productList,
+    updateProduct,
 } from "../controllers/productController.js";
 
 const productRouter = Router();
@@ -20,7 +21,13 @@ productRouter.post(
 );
 productRouter.get("/list", productList);
 productRouter.get("/:id", getProductById);
-productRouter.patch("/:id", authenticate, authorize, changeStock);
+productRouter.patch(
+    "/:id",
+    upload.array("images"),
+    authenticate,
+    authorize,
+    updateProduct
+);
 productRouter.delete("/:id", authenticate, authorize, deleteProduct);
 
 export default productRouter;
