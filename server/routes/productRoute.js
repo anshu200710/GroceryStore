@@ -23,10 +23,16 @@ productRouter.get("/list", productList);
 productRouter.get("/:id", getProductById);
 productRouter.patch(
     "/:id",
-    upload.array("images"),
     authenticate,
     authorize,
-    updateProduct
+    upload.array("images"),
+    (req, res, next) => {
+        // Check if only inStock is being updated (for toggle)
+        if (Object.keys(req.body).length === 1 && req.body.hasOwnProperty("inStock")) {
+            return changeStock(req, res, next);
+        }
+        updateProduct(req, res, next);
+    }
 );
 productRouter.delete("/:id", authenticate, authorize, deleteProduct);
 
