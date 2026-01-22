@@ -3,9 +3,15 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import CustomError from "../utils/CustomError.js";
 import { JWT_SECRET } from "../config/index.js";
+import { auth } from "../config/firebaseAdmin.js";
 
 export const authenticate = asyncHandler(async (req, res, next) => {
-    const token = req.cookies.token;
+    let token = req.headers.authorization?.replace("Bearer ", "");
+    
+    // Fallback to cookie
+    if (!token) {
+        token = req.cookies.token;
+    }
 
     if (!token) {
         return next(
@@ -18,9 +24,24 @@ export const authenticate = asyncHandler(async (req, res, next) => {
 
     let decodedToken;
     try {
-        decodedToken = jwt.verify(token, JWT_SECRET);
+        // Try to verify as Firebase token first
+        try {
+            decodedToken = await auth.verifyIdToken(token);
+            // Firebase token verified - find user by firebaseUid
+            const user = await User.findOne({ firebaseUid: decodedToken.uid }).select(
+                "-password"
+            );
+            if (!user) {
+                return next(new CustomError(401, "User not found"));
+            }
+            req.user = user;
+            return next();
+        } catch (firebaseError) {
+            // Not a Firebase token, try JWT
+            decodedToken = jwt.verify(token, JWT_SECRET);
+        }
     } catch (err) {
-        throw new CustomError(401, "Invalid or expired token");
+        return next(new CustomError(401, "Invalid or expired token"));
     }
 
     const user = await User.findById(decodedToken.id).select("-password");
@@ -29,7 +50,6 @@ export const authenticate = asyncHandler(async (req, res, next) => {
     }
 
     req.user = user;
-
     next();
 });
 
