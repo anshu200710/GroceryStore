@@ -403,25 +403,11 @@ const Cart = () => {
                         <span>Shipping Fee</span>
                         <span className="text-green-600">Free</span>
                     </p>
-                    <p className="flex justify-between">
-                        <span>Tax (2%)</span>
-                        <span>
-                            {currency}
-                            {parseFloat(
-                                ((getCartAmount() * 2) / 100).toFixed(2)
-                            )}
-                        </span>
-                    </p>
                     <p className="flex justify-between text-lg font-medium mt-3">
                         <span>Total Amount:</span>
                         <span>
                             {currency}
-                            {parseFloat(
-                                (
-                                    getCartAmount() +
-                                    (getCartAmount() * 2) / 100
-                                ).toFixed(2)
-                            )}
+                            {parseFloat(getCartAmount().toFixed(2))}
                         </span>
                     </p>
                 </div>
