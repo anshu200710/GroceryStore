@@ -29,11 +29,64 @@ const Cart = () => {
     const getCart = () => {
         let tempArray = [];
         for (const key in cartItems) {
-            const product = products.find((item) => item._id === key);
-            product.quantity = cartItems[key];
-            tempArray.push(product);
+            // Parse cartKey which can be "productId" or "productId-size"
+            const parts = key.split("-");
+            let productId, size = null;
+            
+            // Check if last part looks like a size (S, M, L, XL, XXL, XXXL)
+            const lastPart = parts[parts.length - 1];
+            const sizeOptions = ["S", "M", "L", "XL", "XXL", "XXXL"];
+            
+            if (sizeOptions.includes(lastPart)) {
+                size = lastPart;
+                productId = parts.slice(0, -1).join("-");
+            } else {
+                productId = key;
+            }
+
+            const product = products.find((item) => item._id === productId);
+            if (product) {
+                const cartItem = { ...product };
+                cartItem.quantity = cartItems[key];
+                cartItem.cartKey = key;
+                cartItem.size = size;
+                tempArray.push(cartItem);
+            }
         }
         setCartArray(tempArray);
+    };
+
+    const changeSize = (oldCartKey, newSize) => {
+        const parts = oldCartKey.split("-");
+        const sizeOptions = ["S", "M", "L", "XL", "XXL", "XXXL"];
+        const lastPart = parts[parts.length - 1];
+        let productId;
+
+        if (sizeOptions.includes(lastPart)) {
+            productId = parts.slice(0, -1).join("-");
+        } else {
+            productId = oldCartKey;
+        }
+
+        const newCartKey = `${productId}-${newSize}`;
+        const quantity = cartItems[oldCartKey];
+
+        let cartData = structuredClone(cartItems);
+        
+        // Remove old key
+        if (cartData[oldCartKey]) {
+            delete cartData[oldCartKey];
+        }
+        
+        // Add with new key
+        if (cartData[newCartKey]) {
+            cartData[newCartKey] += quantity;
+        } else {
+            cartData[newCartKey] = quantity;
+        }
+        
+        setCartItems(cartData);
+        toast.success("Size updated");
     };
 
     const getUserAddresses = async () => {
@@ -74,6 +127,7 @@ const Cart = () => {
                     items: cartArray.map((item) => ({
                         product: item._id,
                         quantity: item.quantity,
+                        size: item.size || null,
                     })),
                     address: selectedAddress._id,
                 });
@@ -89,6 +143,7 @@ const Cart = () => {
                     items: cartArray.map((item) => ({
                         product: item._id,
                         quantity: item.quantity,
+                        size: item.size || null,
                     })),
                     address: selectedAddress._id,
                 });
@@ -172,25 +227,48 @@ const Cart = () => {
                                     {product.name}
                                 </p>
                                 <div className="font-normal text-gray-500/70">
-                                    <p>
-                                        Weight:{" "}
-                                        <span>{product.weight || "N/A"}</span>
-                                    </p>
+                                    {product.size && (
+                                        <div className="flex items-center">
+                                            <p>Size:</p>
+                                            <select
+                                                onChange={(e) =>
+                                                    changeSize(
+                                                        product.cartKey,
+                                                        e.target.value
+                                                    )
+                                                }
+                                                value={product.size}
+                                                className="outline-none border border-gray-300 rounded px-2 py-1 ml-1"
+                                            >
+                                                {product.sizes &&
+                                                    product.sizes.map(
+                                                        (size) => (
+                                                            <option
+                                                                key={size}
+                                                                value={size}
+                                                            >
+                                                                {size}
+                                                            </option>
+                                                        )
+                                                    )}
+                                            </select>
+                                        </div>
+                                    )}
                                     <div className="flex items-center">
                                         <p>Qty:</p>
                                         <select
                                             onChange={(e) =>
                                                 updateCartItem(
-                                                    product._id,
+                                                    product.cartKey,
                                                     Number(e.target.value)
                                                 )
                                             }
-                                            value={cartItems[product._id]}
-                                            className="outline-none"
+                                            value={cartItems[product.cartKey]}
+                                            className="outline-none border border-gray-300 rounded px-2 py-1 ml-1"
                                         >
                                             {Array(
-                                                cartItems[product._id] > 9
-                                                    ? cartItems[product._id]
+                                                cartItems[product.cartKey] > 9
+                                                    ? cartItems[product.cartKey]
                                                     : 9
                                             )
                                                 .fill("")
@@ -216,7 +294,7 @@ const Cart = () => {
                             )}
                         </p>
                         <button
-                            onClick={() => removeFromCart(product._id)}
+                            onClick={() => removeFromCart(product.cartKey)}
                             className="cursor-pointer mx-auto"
                         >
                             <img

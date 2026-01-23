@@ -182,7 +182,7 @@ export const changeStock = asyncHandler(async (req, res, next) => {
 
 export const updateProduct = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-    const { name, category, price, offerPrice, description, existingImages } = req.body;
+    const { name, category, price, offerPrice, description, existingImages, sizes } = req.body;
     const files = req.files || [];
 
     const product = await Product.findById(id);
@@ -250,6 +250,20 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
             }
         }
 
+        // Parse sizes if it's a string
+        let parsedSizes = [];
+        if (sizes) {
+            if (typeof sizes === "string") {
+                try {
+                    parsedSizes = JSON.parse(sizes);
+                } catch (e) {
+                    parsedSizes = [];
+                }
+            } else if (Array.isArray(sizes)) {
+                parsedSizes = sizes;
+            }
+        }
+
         const updatedProduct = await Product.findByIdAndUpdate(
             id,
             {
@@ -260,6 +274,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
                     offerPrice,
                     description: parsedDescription,
                     image: imagesUrl,
+                    sizes: parsedSizes,
                 },
             },
             { new: true }

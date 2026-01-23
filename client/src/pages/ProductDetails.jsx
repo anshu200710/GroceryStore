@@ -3,6 +3,7 @@ import { useAppContext } from "../context/AppContext";
 import { Link, useParams } from "react-router-dom";
 import { assets } from "../assets/assets";
 import ProductCard from "../components/ProductCard";
+import toast from "react-hot-toast";
 
 const ProductDetails = () => {
     const { products, navigate, currency, addToCart } = useAppContext();
@@ -10,6 +11,7 @@ const ProductDetails = () => {
 
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [thumbnail, setThumbnail] = useState(null);
+    const [selectedSize, setSelectedSize] = useState(null);
 
     const product = products.find((item) => item._id === id);
 
@@ -26,6 +28,24 @@ const ProductDetails = () => {
     useEffect(() => {
         setThumbnail(product?.image[0] ? product.image[0] : null);
     }, [product]);
+
+    const handleAddToCart = (goToCart = false) => {
+        const isClothingCategory = product.category === "Mens-Clothing" || product.category === "Womens-Clothing" || product.category === "Kids-Clothing";
+        
+        if (isClothingCategory && product.sizes && product.sizes.length > 0) {
+            if (!selectedSize) {
+                toast.error("Please select Size to continue");
+                return;
+            }
+            addToCart(product._id, selectedSize);
+        } else {
+            addToCart(product._id, null);
+        }
+        
+        if (goToCart) {
+            navigate("/cart");
+        }
+    };
 
     return (
         product && (
@@ -106,18 +126,36 @@ const ProductDetails = () => {
                             ))}
                         </ul>
 
+                        {(product.category === "Mens-Clothing" || product.category === "Womens-Clothing" || product.category === "Kids-Clothing") && product.sizes && product.sizes.length > 0 && (
+                            <div className="mt-6">
+                                <p className="text-base font-medium mb-2">Available Sizes</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {product.sizes.map((size, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => setSelectedSize(size)}
+                                            className={`border-2 rounded px-4 py-2 text-sm font-medium transition cursor-pointer ${
+                                                selectedSize === size
+                                                    ? "border-primary bg-primary text-white"
+                                                    : "border-gray-300 hover:border-primary"
+                                            }`}
+                                        >
+                                            {size}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex items-center mt-10 gap-4 text-base">
                             <button
-                                onClick={() => addToCart(product._id)}
+                                onClick={() => handleAddToCart(false)}
                                 className="w-full py-3.5 cursor-pointer font-medium bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
                             >
                                 Add to Cart
                             </button>
                             <button
-                                onClick={() => {
-                                    addToCart(product._id);
-                                    navigate("/cart");
-                                }}
+                                onClick={() => handleAddToCart(true)}
                                 className="w-full py-3.5 cursor-pointer font-medium bg-primary text-white hover:bg-primary-dull transition"
                             >
                                 Buy now

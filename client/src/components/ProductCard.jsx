@@ -66,7 +66,21 @@ const ProductCard = ({ product }) => {
                             {!cartItems[product._id] ? (
                                 <button
                                     className="flex items-center justify-center gap-1 bg-primary/10 border border-primary/40 md:w-[80px] w-[64px] h-[34px] rounded cursor-pointer"
-                                    onClick={() => addToCart(product._id)}
+                                    onClick={() => {
+                                        const isClothingCategory = 
+                                            product.category === "Mens-Clothing" || 
+                                            product.category === "Womens-Clothing" || 
+                                            product.category === "Kids-Clothing";
+                                        
+                                        if (isClothingCategory && product.sizes && product.sizes.length > 0) {
+                                            navigate(
+                                                `products/${product.category.toLowerCase()}/${product._id}`
+                                            );
+                                            scrollTo(0, 0);
+                                        } else {
+                                            addToCart(product._id);
+                                        }
+                                    }}
                                 >
                                     <img
                                         src={assets.cart_icon}

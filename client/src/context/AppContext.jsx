@@ -93,14 +93,15 @@ export const AppContextProvider = ({ children }) => {
         }
     }, [cartItems]);
 
-    // Add Product to Cart
-    const addToCart = (itemId) => {
+    // Add Product to Cart with Size
+    const addToCart = (itemId, size = null) => {
         let cartData = structuredClone(cartItems);
+        const cartKey = size ? `${itemId}-${size}` : itemId;
 
-        if (cartData[itemId]) {
-            cartData[itemId] += 1;
+        if (cartData[cartKey]) {
+            cartData[cartKey] += 1;
         } else {
-            cartData[itemId] = 1;
+            cartData[cartKey] = 1;
         }
         setCartItems(cartData);
         toast.success("Added to Cart");
@@ -115,12 +116,12 @@ export const AppContextProvider = ({ children }) => {
     };
 
     // Remove Product from Cart
-    const removeFromCart = (itemId) => {
+    const removeFromCart = (cartKey) => {
         let cartData = structuredClone(cartItems);
-        if (cartData[itemId]) {
-            cartData[itemId] -= 1;
-            if (cartData[itemId] === 0) {
-                delete cartData[itemId];
+        if (cartData[cartKey]) {
+            cartData[cartKey] -= 1;
+            if (cartData[cartKey] === 0) {
+                delete cartData[cartKey];
             }
         }
         toast.success("Remove from Cart");
@@ -140,8 +141,16 @@ export const AppContextProvider = ({ children }) => {
     const getCartAmount = () => {
         let totalAmount = 0;
         for (const items in cartItems) {
-            let itemInfo = products.find((product) => product._id === items);
-            if (cartItems[items] > 0) {
+            // Extract product ID from cartKey (format: "productId" or "productId-size")
+            const productId = items.split("-").slice(0, -1).join("-") || items.split("-")[0];
+            let itemInfo = products.find((product) => product._id === productId || product._id === items);
+            
+            // Try to find by the original items key first (for backward compatibility)
+            if (!itemInfo) {
+                itemInfo = products.find((product) => product._id === items);
+            }
+            
+            if (itemInfo && cartItems[items] > 0) {
                 totalAmount += itemInfo.offerPrice * cartItems[items];
             }
         }

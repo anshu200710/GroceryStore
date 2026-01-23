@@ -22,6 +22,7 @@ const ProductList = () => {
         offerPrice: "",
         description: "",
         images: [],
+        sizes: [],
     });
     const [newImages, setNewImages] = useState([]);
 
@@ -64,6 +65,7 @@ const ProductList = () => {
             offerPrice: product.offerPrice,
             description: product.description?.join("\n") || "",
             images: product.image || [],
+            sizes: product.sizes || [],
         });
         setNewImages([]);
         setShowEditModal(true);
@@ -124,6 +126,7 @@ const ProductList = () => {
                 .split("\n")
                 .filter((line) => line.trim() !== "");
             formData.append("description", JSON.stringify(descriptionArray));
+            formData.append("sizes", JSON.stringify(editFormData.sizes));
             
             // Append existing images
             editFormData.images.forEach((img) => {
@@ -452,6 +455,41 @@ const ProductList = () => {
                                     className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                                 />
                             </div>
+                            {(editFormData.category === "Mens-Clothing" || editFormData.category === "Womens-Clothing" || editFormData.category === "Kids-Clothing") && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Sizes Available
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                                            <label
+                                                key={size}
+                                                className="flex items-center gap-2 cursor-pointer border border-gray-300 rounded px-3 py-2 hover:border-blue-500"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editFormData.sizes?.includes(size) || false}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setEditFormData((prev) => ({
+                                                                ...prev,
+                                                                sizes: [...(prev.sizes || []), size],
+                                                            }));
+                                                        } else {
+                                                            setEditFormData((prev) => ({
+                                                                ...prev,
+                                                                sizes: (prev.sizes || []).filter((s) => s !== size),
+                                                            }));
+                                                        }
+                                                    }}
+                                                    className="cursor-pointer"
+                                                />
+                                                <span>{size}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Product Images

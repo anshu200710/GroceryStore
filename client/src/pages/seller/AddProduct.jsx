@@ -13,6 +13,7 @@ const AddProduct = () => {
     const [price, setPrice] = useState("");
     const [offerPrice, setOfferPrice] = useState("");
     const [loading, setLoading] = useState(false);
+    const [selectedSizes, setSelectedSizes] = useState([]);
 
     const onSubmitHandler = async (event) => {
         try {
@@ -25,6 +26,7 @@ const AddProduct = () => {
                 category,
                 price,
                 offerPrice,
+                sizes: selectedSizes,
             };
 
             const formData = new FormData();
@@ -48,6 +50,7 @@ const AddProduct = () => {
                 setPrice("");
                 setOfferPrice("");
                 setFiles([]);
+                setSelectedSizes([]);
             }
         } catch (error) {
             if (error.response && error.response.data) {
@@ -189,6 +192,35 @@ const AddProduct = () => {
                         />
                     </div>
                 </div>
+                {(category === "Mens-Clothing" || category === "Womens-Clothing" || category === "Kids-Clothing") && (
+                    <div className="flex flex-col gap-1 max-w-md">
+                        <label className="text-base font-medium">Sizes Available</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                                <label
+                                    key={size}
+                                    className="flex items-center gap-2 cursor-pointer border border-gray-500/40 rounded px-3 py-2"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedSizes.includes(size)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedSizes([...selectedSizes, size]);
+                                            } else {
+                                                setSelectedSizes(
+                                                    selectedSizes.filter((s) => s !== size)
+                                                );
+                                            }
+                                        }}
+                                        className="cursor-pointer"
+                                    />
+                                    <span>{size}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                )}
                 <button
                     className={`px-8 py-2.5 bg-primary text-white font-medium rounded cursor-pointer ${loading ? "opacity-50 cursor-not-allowed" : ""
                         }`}
