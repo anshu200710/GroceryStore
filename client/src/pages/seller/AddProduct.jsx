@@ -195,29 +195,88 @@ const AddProduct = () => {
                 {(category === "Mens-Clothing" || category === "Womens-Clothing" || category === "Kids-Clothing") && (
                     <div className="flex flex-col gap-1 max-w-md">
                         <label className="text-base font-medium">Sizes Available</label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
-                                <label
-                                    key={size}
-                                    className="flex items-center gap-2 cursor-pointer border border-gray-500/40 rounded px-3 py-2"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedSizes.includes(size)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setSelectedSizes([...selectedSizes, size]);
-                                            } else {
-                                                setSelectedSizes(
-                                                    selectedSizes.filter((s) => s !== size)
-                                                );
-                                            }
-                                        }}
-                                        className="cursor-pointer"
-                                    />
-                                    <span>{size}</span>
-                                </label>
-                            ))}
+                        <div className="space-y-3 mt-2">
+                            <div>
+                                <p className="text-xs font-medium text-gray-600 mb-2">Standard Sizes</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                                        <label
+                                            key={size}
+                                            className="flex items-center gap-2 cursor-pointer border border-gray-500/40 rounded px-3 py-2"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedSizes.includes(size)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedSizes([...selectedSizes, size]);
+                                                    } else {
+                                                        setSelectedSizes(
+                                                            selectedSizes.filter((s) => s !== size)
+                                                        );
+                                                    }
+                                                }}
+                                                className="cursor-pointer"
+                                            />
+                                            <span>{size}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-gray-600 mb-2">UK Sizes</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {["UK_4", "UK_6", "UK_8", "UK_10", "UK_12", "UK_14", "UK_16", "UK_18"].map((size) => (
+                                        <label
+                                            key={size}
+                                            className="flex items-center gap-2 cursor-pointer border border-gray-500/40 rounded px-3 py-2"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedSizes.includes(size)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedSizes([...selectedSizes, size]);
+                                                    } else {
+                                                        setSelectedSizes(
+                                                            selectedSizes.filter((s) => s !== size)
+                                                        );
+                                                    }
+                                                }}
+                                                className="cursor-pointer"
+                                            />
+                                            <span>{size}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-gray-600 mb-2">US Sizes</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {["US_0", "US_2", "US_4", "US_6", "US_8", "US_10", "US_12", "US_14"].map((size) => (
+                                        <label
+                                            key={size}
+                                            className="flex items-center gap-2 cursor-pointer border border-gray-500/40 rounded px-3 py-2"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedSizes.includes(size)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedSizes([...selectedSizes, size]);
+                                                    } else {
+                                                        setSelectedSizes(
+                                                            selectedSizes.filter((s) => s !== size)
+                                                        );
+                                                    }
+                                                }}
+                                                className="cursor-pointer"
+                                            />
+                                            <span>{size}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

@@ -460,33 +460,100 @@ const ProductList = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Sizes Available
                                     </label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
-                                            <label
-                                                key={size}
-                                                className="flex items-center gap-2 cursor-pointer border border-gray-300 rounded px-3 py-2 hover:border-blue-500"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={editFormData.sizes?.includes(size) || false}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setEditFormData((prev) => ({
-                                                                ...prev,
-                                                                sizes: [...(prev.sizes || []), size],
-                                                            }));
-                                                        } else {
-                                                            setEditFormData((prev) => ({
-                                                                ...prev,
-                                                                sizes: (prev.sizes || []).filter((s) => s !== size),
-                                                            }));
-                                                        }
-                                                    }}
-                                                    className="cursor-pointer"
-                                                />
-                                                <span>{size}</span>
-                                            </label>
-                                        ))}
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="text-xs font-medium text-gray-600 mb-2">Standard Sizes</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                                                    <label
+                                                        key={size}
+                                                        className="flex items-center gap-2 cursor-pointer border border-gray-300 rounded px-3 py-2 hover:border-blue-500"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={editFormData.sizes?.includes(size) || false}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setEditFormData((prev) => ({
+                                                                        ...prev,
+                                                                        sizes: [...(prev.sizes || []), size],
+                                                                    }));
+                                                                } else {
+                                                                    setEditFormData((prev) => ({
+                                                                        ...prev,
+                                                                        sizes: (prev.sizes || []).filter((s) => s !== size),
+                                                                    }));
+                                                                }
+                                                            }}
+                                                            className="cursor-pointer"
+                                                        />
+                                                        <span>{size}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-gray-600 mb-2">UK Sizes</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {["UK_4", "UK_6", "UK_8", "UK_10", "UK_12", "UK_14", "UK_16", "UK_18"].map((size) => (
+                                                    <label
+                                                        key={size}
+                                                        className="flex items-center gap-2 cursor-pointer border border-gray-300 rounded px-3 py-2 hover:border-blue-500"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={editFormData.sizes?.includes(size) || false}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setEditFormData((prev) => ({
+                                                                        ...prev,
+                                                                        sizes: [...(prev.sizes || []), size],
+                                                                    }));
+                                                                } else {
+                                                                    setEditFormData((prev) => ({
+                                                                        ...prev,
+                                                                        sizes: (prev.sizes || []).filter((s) => s !== size),
+                                                                    }));
+                                                                }
+                                                            }}
+                                                            className="cursor-pointer"
+                                                        />
+                                                        <span>{size}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-gray-600 mb-2">US Sizes</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {["US_0", "US_2", "US_4", "US_6", "US_8", "US_10", "US_12", "US_14"].map((size) => (
+                                                    <label
+                                                        key={size}
+                                                        className="flex items-center gap-2 cursor-pointer border border-gray-300 rounded px-3 py-2 hover:border-blue-500"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={editFormData.sizes?.includes(size) || false}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setEditFormData((prev) => ({
+                                                                        ...prev,
+                                                                        sizes: [...(prev.sizes || []), size],
+                                                                    }));
+                                                                } else {
+                                                                    setEditFormData((prev) => ({
+                                                                        ...prev,
+                                                                        sizes: (prev.sizes || []).filter((s) => s !== size),
+                                                                    }));
+                                                                }
+                                                            }}
+                                                            className="cursor-pointer"
+                                                        />
+                                                        <span>{size}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}

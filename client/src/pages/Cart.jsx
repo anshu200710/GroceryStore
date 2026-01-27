@@ -33,11 +33,17 @@ const Cart = () => {
             const parts = key.split("-");
             let productId, size = null;
             
-            // Check if last part looks like a size (S, M, L, XL, XXL, XXXL)
+            // Check if last part looks like a size
             const lastPart = parts[parts.length - 1];
             const sizeOptions = ["S", "M", "L", "XL", "XXL", "XXXL"];
+            const isStandardSize = sizeOptions.includes(lastPart);
+            const isUKSize = lastPart.startsWith("UK") && parts.length >= 2 && parts[parts.length - 2] === "productId" === false;
+            const isUSSize = lastPart.startsWith("US") && parts.length >= 2 && parts[parts.length - 2] === "productId" === false;
             
-            if (sizeOptions.includes(lastPart)) {
+            // Simpler approach: check if it's a valid size format
+            const isValidSize = isStandardSize || lastPart.match(/^(UK|US)_\d+$/);
+            
+            if (isValidSize) {
                 size = lastPart;
                 productId = parts.slice(0, -1).join("-");
             } else {
@@ -60,9 +66,10 @@ const Cart = () => {
         const parts = oldCartKey.split("-");
         const sizeOptions = ["S", "M", "L", "XL", "XXL", "XXXL"];
         const lastPart = parts[parts.length - 1];
+        const isValidSize = sizeOptions.includes(lastPart) || lastPart.match(/^(UK|US)_\d+$/);
         let productId;
 
-        if (sizeOptions.includes(lastPart)) {
+        if (isValidSize) {
             productId = parts.slice(0, -1).join("-");
         } else {
             productId = oldCartKey;
