@@ -159,15 +159,6 @@ const Cart = () => {
             )}
             {products.length > 0 && cartItems ? (
                 <div className="flex flex-col md:flex-row mt-16">
-                    {/* DEBUG: show raw cartItems when cart count > 0 but no cart rows rendered */}
-                    {cartArray.length === 0 && getCartCount() > 0 && (
-                        <div className="w-full p-4 mb-4 border border-red-200 bg-red-50 text-sm text-red-700 rounded">
-                            <p className="font-medium">Debug: Cart count indicates items but cart rows are empty</p>
-                            <p>Cart Count: {getCartCount()}</p>
-                            <p>Products Loaded: {products.length}</p>
-                            <pre className="mt-2 max-h-40 overflow-auto">{JSON.stringify(cartItems, null, 2)}</pre>
-                        </div>
-                    )}
                     <div className="flex-1 max-w-4xl">
                 <h1 className="text-3xl font-medium mb-6">
                     Shopping Cart{" "}
