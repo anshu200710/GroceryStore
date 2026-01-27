@@ -84,6 +84,9 @@ import pet_supplies_image from "./pet_supplies_image.png";
 import electronics_image from "./electronics_image.png";
 import stationery_image from "./stationery_image.png";
 
+// External groceries icon (Cloudinary)
+export const groceries_image = "https://res.cloudinary.com/dgmovv8me/image/upload/v1769506541/Groceries_icon_kbrxjn.png";
+
 
 export const assets = {
   logo,
@@ -113,6 +116,7 @@ export const assets = {
   bottom_banner_image_sm,
   add_address_iamge,
   box_icon,
+  groceries_image,
 };
 
 export const categories = [
@@ -151,6 +155,13 @@ export const categories = [
     path: "Grains",
     image: grain_image,
     bgColor: "#F1E3F9",
+  },
+  // 🌾 New Category: Groceries (General)
+  {
+    text: "Groceries",
+    path: "Groceries",
+    image: groceries_image,
+    bgColor: "#E8F8F5",
   },
 
   // 🍿 Food & Daily Needs
@@ -521,6 +532,23 @@ export const dummyProducts = [
     ],
     createdAt: "2025-03-25T07:17:46.018Z",
     updatedAt: "2025-03-25T07:18:13.103Z",
+    inStock: true,
+  },
+  // Sample Groceries product for testing
+  {
+    _id: "gr1001",
+    name: "Daily Essentials Pack",
+    category: "Groceries",
+    price: 120,
+    offerPrice: 95,
+    image: [groceries_image],
+    description: [
+      "Assorted daily essentials",
+      "Rice, pulses, and spices",
+      "Pack for a small family",
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     inStock: true,
   },
   {
