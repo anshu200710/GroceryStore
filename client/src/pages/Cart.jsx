@@ -29,28 +29,27 @@ const Cart = () => {
     const getCart = () => {
         let tempArray = [];
         for (const key in cartItems) {
-            // Parse cartKey which can be "productId" or "productId-size"
+            // Robust parsing: cartKey can be "productId" or "productId-size" where size may be arbitrary (numeric or text)
             const parts = key.split("-");
-            let productId, size = null;
-            
-            // Check if last part looks like a size
-            const lastPart = parts[parts.length - 1];
-            const sizeOptions = ["S", "M", "L", "XL", "XXL", "XXXL"];
-            const isStandardSize = sizeOptions.includes(lastPart);
-            const isUKSize = lastPart.startsWith("UK") && parts.length >= 2 && parts[parts.length - 2] === "productId" === false;
-            const isUSSize = lastPart.startsWith("US") && parts.length >= 2 && parts[parts.length - 2] === "productId" === false;
-            
-            // Simpler approach: check if it's a valid size format
-            const isValidSize = isStandardSize || lastPart.match(/^(UK|US)_\d+$/);
-            
-            if (isValidSize) {
-                size = lastPart;
-                productId = parts.slice(0, -1).join("-");
-            } else {
-                productId = key;
+            let productId = key; // default assume whole key is product id
+            let size = null;
+
+            if (parts.length > 1) {
+                // candidate id is everything except the last part
+                const candidateId = parts.slice(0, -1).join("-");
+                const candidateProduct = products.find((item) => item._id === candidateId);
+                if (candidateProduct) {
+                    productId = candidateId;
+                    size = parts.slice(-1)[0];
+                }
             }
 
-            const product = products.find((item) => item._id === productId);
+            // Fallbacks: try matching full key as id (backwards compatibility)
+            let product = products.find((item) => item._id === productId);
+            if (!product) {
+                product = products.find((item) => item._id === key);
+            }
+
             if (product) {
                 const cartItem = { ...product };
                 cartItem.quantity = cartItems[key];
@@ -62,39 +61,7 @@ const Cart = () => {
         setCartArray(tempArray);
     };
 
-    const changeSize = (oldCartKey, newSize) => {
-        const parts = oldCartKey.split("-");
-        const sizeOptions = ["S", "M", "L", "XL", "XXL", "XXXL"];
-        const lastPart = parts[parts.length - 1];
-        const isValidSize = sizeOptions.includes(lastPart) || lastPart.match(/^(UK|US)_\d+$/);
-        let productId;
 
-        if (isValidSize) {
-            productId = parts.slice(0, -1).join("-");
-        } else {
-            productId = oldCartKey;
-        }
-
-        const newCartKey = `${productId}-${newSize}`;
-        const quantity = cartItems[oldCartKey];
-
-        let cartData = structuredClone(cartItems);
-        
-        // Remove old key
-        if (cartData[oldCartKey]) {
-            delete cartData[oldCartKey];
-        }
-        
-        // Add with new key
-        if (cartData[newCartKey]) {
-            cartData[newCartKey] += quantity;
-        } else {
-            cartData[newCartKey] = quantity;
-        }
-        
-        setCartItems(cartData);
-        toast.success("Size updated");
-    };
 
     const getUserAddresses = async () => {
         try {
@@ -192,6 +159,15 @@ const Cart = () => {
             )}
             {products.length > 0 && cartItems ? (
                 <div className="flex flex-col md:flex-row mt-16">
+                    {/* DEBUG: show raw cartItems when cart count > 0 but no cart rows rendered */}
+                    {cartArray.length === 0 && getCartCount() > 0 && (
+                        <div className="w-full p-4 mb-4 border border-red-200 bg-red-50 text-sm text-red-700 rounded">
+                            <p className="font-medium">Debug: Cart count indicates items but cart rows are empty</p>
+                            <p>Cart Count: {getCartCount()}</p>
+                            <p>Products Loaded: {products.length}</p>
+                            <pre className="mt-2 max-h-40 overflow-auto">{JSON.stringify(cartItems, null, 2)}</pre>
+                        </div>
+                    )}
                     <div className="flex-1 max-w-4xl">
                 <h1 className="text-3xl font-medium mb-6">
                     Shopping Cart{" "}
@@ -237,28 +213,7 @@ const Cart = () => {
                                     {product.size && (
                                         <div className="flex items-center">
                                             <p>Size:</p>
-                                            <select
-                                                onChange={(e) =>
-                                                    changeSize(
-                                                        product.cartKey,
-                                                        e.target.value
-                                                    )
-                                                }
-                                                value={product.size}
-                                                className="outline-none border border-gray-300 rounded px-2 py-1 ml-1"
-                                            >
-                                                {product.sizes &&
-                                                    product.sizes.map(
-                                                        (size) => (
-                                                            <option
-                                                                key={size}
-                                                                value={size}
-                                                            >
-                                                                {size}
-                                                            </option>
-                                                        )
-                                                    )}
-                                            </select>
+                                            <span className="ml-2 font-medium">{String(product.size).replace("_", " ")}</span>
                                         </div>
                                     )}
                                     <div className="flex items-center">

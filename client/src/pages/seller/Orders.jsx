@@ -109,15 +109,14 @@ const Orders = () => {
                                     {order.items
                                         .filter((item) => item.product)
                                         .map((item, i) => (
-                                            <p
-                                                key={i}
-                                                className="text-sm font-medium"
-                                            >
-                                                {item.product.name}{" "}
-                                                <span className="text-primary">
-                                                    x {item.quantity}
-                                                </span>
-                                            </p>
+                                            <div key={i} className="text-sm font-medium mb-2">
+                                                <p className="font-medium">{item.product.name} <span className="text-primary">x {item.quantity}</span></p>
+                                                <div className="text-gray-600 text-sm mt-1">
+                                                    <p>Category: {item.product.category}</p>
+                                                    {item.size && <p>Size: {String(item.size).replace("_"," ")}</p>}
+                                                    <p>Amount: {currency}{parseFloat((item.product.offerPrice * item.quantity).toFixed(2))}</p>
+                                                </div>
+                                            </div>
                                         ))}
                                 </div>
                             </div>

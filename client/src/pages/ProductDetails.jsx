@@ -129,70 +129,23 @@ const ProductDetails = () => {
                         {(product.category === "Mens-Clothing" || product.category === "Womens-Clothing" || product.category === "Kids-Clothing") && product.sizes && product.sizes.length > 0 && (
                             <div className="mt-6">
                                 <p className="text-base font-medium mb-2">Available Sizes</p>
-                                <div className="space-y-3">
-                                    {/* Standard Sizes */}
-                                    {product.sizes.filter(s => ["S", "M", "L", "XL", "XXL", "XXXL"].includes(s)).length > 0 && (
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-600 mb-2">Standard</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {product.sizes.filter(s => ["S", "M", "L", "XL", "XXL", "XXXL"].includes(s)).map((size, index) => (
-                                                    <button
-                                                        key={index}
-                                                        onClick={() => setSelectedSize(size)}
-                                                        className={`border-2 rounded px-4 py-2 text-sm font-medium transition cursor-pointer ${
-                                                            selectedSize === size
-                                                                ? "border-primary bg-primary text-white"
-                                                                : "border-gray-300 hover:border-primary"
-                                                        }`}
-                                                    >
-                                                        {size}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* UK Sizes */}
-                                    {product.sizes.some(s => s.startsWith("UK_")) && (
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-600 mb-2">UK Sizes</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {product.sizes.filter(s => s.startsWith("UK_")).map((size, index) => (
-                                                    <button
-                                                        key={index}
-                                                        onClick={() => setSelectedSize(size)}
-                                                        className={`border-2 rounded px-4 py-2 text-sm font-medium transition cursor-pointer ${
-                                                            selectedSize === size
-                                                                ? "border-primary bg-primary text-white"
-                                                                : "border-gray-300 hover:border-primary"
-                                                        }`}
-                                                    >
-                                                        {size.replace("_", " ")}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* US Sizes */}
-                                    {product.sizes.some(s => s.startsWith("US_")) && (
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-600 mb-2">US Sizes</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {product.sizes.filter(s => s.startsWith("US_")).map((size, index) => (
-                                                    <button
-                                                        key={index}
-                                                        onClick={() => setSelectedSize(size)}
-                                                        className={`border-2 rounded px-4 py-2 text-sm font-medium transition cursor-pointer ${
-                                                            selectedSize === size
-                                                                ? "border-primary bg-primary text-white"
-                                                                : "border-gray-300 hover:border-primary"
-                                                        }`}
-                                                    >
-                                                        {size.replace("_", " ")}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                <div className="flex flex-wrap gap-2">
+                                    {Array.from(new Set(product.sizes)).map((size, index) => {
+                                        const display = String(size).replace("_", " ");
+                                        return (
+                                            <button
+                                                key={index}
+                                                onClick={() => setSelectedSize(size)}
+                                                className={`border-2 rounded px-4 py-2 text-sm font-medium transition cursor-pointer ${
+                                                    selectedSize === size
+                                                        ? "border-primary bg-primary text-white"
+                                                        : "border-gray-300 hover:border-primary"
+                                                }`}
+                                            >
+                                                {display}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
