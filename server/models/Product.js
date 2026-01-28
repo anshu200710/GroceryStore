@@ -10,6 +10,15 @@ const productSchema = new mongoose.Schema(
         category: { type: String, required: true },
         inStock: { type: Boolean, default: true },
         sizes: { type: Array, default: [] },
+        colors: {
+            type: [
+                {
+                    name: { type: String, trim: true },
+                    image: { type: String },
+                },
+            ],
+            default: [],
+        },
     },
     { timestamps: true }
 );

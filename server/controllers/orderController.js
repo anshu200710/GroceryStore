@@ -26,6 +26,25 @@ export const placeOrderCOD = asyncHandler(async (req, res, next) => {
             );
         }
 
+        // If product defines colors, ensure item.color is provided and valid
+        if (product.colors && product.colors.length > 0) {
+            if (!item.color) {
+                return next(
+                    new CustomError(400, `Color selection is required for product: ${product._id}`)
+                );
+            }
+
+            const colorExists = product.colors.some(
+                (c) => c.name === item.color
+            );
+
+            if (!colorExists) {
+                return next(
+                    new CustomError(400, `Invalid color selected for product: ${product._id}`)
+                );
+            }
+        }
+
         amount += product.offerPrice * item.quantity;
     }
 
@@ -66,16 +85,36 @@ export const placeOrderStripe = asyncHandler(async (req, res, next) => {
 
     for (const item of items) {
         const product = await Product.findById(item.product);
-        productData.push({
-            name: product.name,
-            price: product.offerPrice,
-            quantity: item.quantity,
-        });
         if (!product) {
             return next(
                 new CustomError(404, `Product not found: ${item.product}`)
             );
         }
+
+        // If product defines colors, ensure item.color is provided and valid
+        if (product.colors && product.colors.length > 0) {
+            if (!item.color) {
+                return next(
+                    new CustomError(400, `Color selection is required for product: ${product._id}`)
+                );
+            }
+
+            const colorExists = product.colors.some(
+                (c) => c.name === item.color
+            );
+
+            if (!colorExists) {
+                return next(
+                    new CustomError(400, `Invalid color selected for product: ${product._id}`)
+                );
+            }
+        }
+
+        productData.push({
+            name: product.name,
+            price: product.offerPrice,
+            quantity: item.quantity,
+        });
 
         amount += product.offerPrice * item.quantity;
     }

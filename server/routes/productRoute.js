@@ -14,7 +14,10 @@ const productRouter = Router();
 
 productRouter.post(
     "/add",
-    upload.array("images"),
+    upload.fields([
+        { name: "images", maxCount: 10 },
+        { name: "colorImages", maxCount: 10 },
+    ]),
     authenticate,
     authorize,
     addProduct
@@ -25,7 +28,10 @@ productRouter.patch(
     "/:id",
     authenticate,
     authorize,
-    upload.array("images"),
+    upload.fields([
+        { name: "images", maxCount: 10 },
+        { name: "colorImages", maxCount: 10 },
+    ]),
     (req, res, next) => {
         // Check if only inStock is being updated (for toggle)
         if (Object.keys(req.body).length === 1 && req.body.hasOwnProperty("inStock")) {

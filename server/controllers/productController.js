@@ -8,9 +8,10 @@ import { Readable } from "stream";
 //! Add Product: /api/product/add
 
 export const addProduct = asyncHandler(async (req, res, next) => {
-  const files = req.files || [];
+  // When using upload.fields, req.files will be an object with arrays for each field (images, colorImages)
+  const imagesFiles = (req.files && req.files.images) || [];
 
-  if (!files.length) {
+  if (!imagesFiles.length) {
     return next(new CustomError(400, "No files uploaded"));
   }
 
@@ -21,18 +22,18 @@ export const addProduct = asyncHandler(async (req, res, next) => {
     return next(new CustomError(400, "Invalid JSON format in 'productData'"));
   }
 
-  const { error } = productValidationSchema.validate(productData, {
-    convert: true,
-  });
-
-  if (error) {
-    const message = `The field '${error.details[0].context.key}' is missing or invalid. Please provide a valid value.`;
-    return next(new CustomError(400, message));
-  }
+  // Validation will be performed after uploading images and mapping colors to ensure
+  // that image and color.image fields (which depend on uploads) are present/valid.
+  // So skip validation here and perform it later once we have the final payload.
+  // (This avoids failing validation for missing image fields before upload.)
 
   try {
+    // req.files will be an object when using upload.fields
+    const imagesFiles = (req.files && req.files.images) || [];
+    const colorFiles = (req.files && req.files.colorImages) || [];
+
     const imagesUrl = await Promise.all(
-      files.map(file => {
+      imagesFiles.map(file => {
         return new Promise((resolve, reject) => {
           if (!file.buffer) {
             return reject(new Error("File buffer is undefined"));
@@ -49,10 +50,63 @@ export const addProduct = asyncHandler(async (req, res, next) => {
       })
     );
 
-    const newProduct = await Product.create({
+    // Upload color swatches and build mapping originalname -> url
+    const colorMapping = {};
+    if (colorFiles.length > 0) {
+      const colorUploads = await Promise.all(
+        colorFiles.map(file => {
+          return new Promise((resolve, reject) => {
+            if (!file.buffer) {
+              return reject(new Error("File buffer is undefined"));
+            }
+            const stream = cloudinary.uploader.upload_stream(
+              { resource_type: "image" },
+              (error, result) => {
+                if (error) return reject(error);
+                // map by originalname
+                colorMapping[file.originalname] = result.secure_url;
+                resolve(result.secure_url);
+              }
+            );
+            Readable.from(file.buffer).pipe(stream);
+          });
+        })
+      );
+    }
+
+    // Map colors from productData to include uploaded image urls when provided
+    let parsedColors = productData.colors || [];
+    if (Array.isArray(parsedColors) && parsedColors.length > 0) {
+      parsedColors = parsedColors.map((c) => ({
+        name: c.name,
+        // Use uploaded URL when available; otherwise omit the image field so Joi won't validate a plain filename
+        image: colorMapping[c.image] ? colorMapping[c.image] : undefined,
+      }));
+    }
+
+    // Debug: log files and payload to help diagnose validation failures
+    console.log("addProduct: req.files keys", Object.keys(req.files || {}), "images count", imagesFiles.length, "colorFiles count", colorFiles.length);
+
+    // Validate the final payload (after images and colors have been resolved)
+    const finalPayload = {
       ...productData,
       image: imagesUrl,
+      colors: parsedColors,
+    };
+
+    console.log("addProduct: finalPayload ->", JSON.stringify(finalPayload, null, 2));
+
+    const { error: validationError } = productValidationSchema.validate(finalPayload, {
+      convert: true,
     });
+
+    if (validationError) {
+      console.error("addProduct validationError details:", validationError.details);
+      const message = `The field '${validationError.details[0].context.key}' is missing or invalid. Please provide a valid value.`;
+      return next(new CustomError(400, message));
+    }
+
+    const newProduct = await Product.create(finalPayload);
 
     res.status(201).json({
       success: true,
@@ -264,6 +318,46 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
             }
         }
 
+        // Parse colors if it's a string
+        let parsedColors = [];
+        if (req.body.colors || req.body.colors === "" ) {
+            const colorsInput = req.body.colors || "";
+            if (typeof colorsInput === "string") {
+                try {
+                    parsedColors = JSON.parse(colorsInput);
+                } catch (e) {
+                    parsedColors = [];
+                }
+            } else if (Array.isArray(colorsInput)) {
+                parsedColors = colorsInput;
+            }
+        }
+
+        // handle uploaded color images mapping
+        const colorFiles = (req.files && req.files.colorImages) || [];
+        const colorMapping = {};
+        if (colorFiles.length > 0) {
+            await Promise.all(
+                colorFiles.map((file) => {
+                    return new Promise((resolve, reject) => {
+                        if (!file.buffer) return reject(new Error("File buffer is undefined"));
+                        const stream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
+                            if (error) return reject(error);
+                            colorMapping[file.originalname] = result.secure_url;
+                            resolve(result.secure_url);
+                        });
+                        Readable.from(file.buffer).pipe(stream);
+                    });
+                })
+            );
+
+            // map parsedColors images
+            parsedColors = parsedColors.map((c) => ({
+                name: c.name,
+                // Use uploaded URL when available; otherwise omit the image field so Joi won't validate a plain filename
+                image: colorMapping[c.image] ? colorMapping[c.image] : undefined,
+            }));
+        }
         const updatedProduct = await Product.findByIdAndUpdate(
             id,
             {
@@ -275,6 +369,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
                     description: parsedDescription,
                     image: imagesUrl,
                     sizes: parsedSizes,
+                    colors: parsedColors,
                 },
             },
             { new: true }
