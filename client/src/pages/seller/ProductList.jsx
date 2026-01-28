@@ -75,6 +75,16 @@ const ProductList = () => {
         setEditFormData((prev) => ({ ...prev, sizes: (prev.sizes || []).filter((s) => s !== size) }));
     }; 
 
+    // Remove a color by name and also remove any queued uploaded color file with same filename
+    const removeEditColor = (colorName) => {
+        // Find which color object is being removed so we can also drop the queued file matching its image filename
+        const removed = (editFormData.colors || []).find((c) => c.name === colorName);
+        setEditFormData((prev) => ({ ...prev, colors: (prev.colors || []).filter((c) => c.name !== colorName) }));
+        if (removed && removed.image && typeof removed.image === 'string') {
+            setNewColorFiles((prev) => prev.filter((file) => file.name !== removed.image));
+        }
+    };
+
     // Filter states
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");

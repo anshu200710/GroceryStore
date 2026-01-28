@@ -79,8 +79,8 @@ export const addProduct = asyncHandler(async (req, res, next) => {
     if (Array.isArray(parsedColors) && parsedColors.length > 0) {
       parsedColors = parsedColors.map((c) => ({
         name: c.name,
-        // Use uploaded URL when available; otherwise omit the image field so Joi won't validate a plain filename
-        image: colorMapping[c.image] ? colorMapping[c.image] : undefined,
+        // Use uploaded URL when available; otherwise preserve an existing URL if provided, or leave undefined
+        image: colorMapping[c.image] ? colorMapping[c.image] : (c.image || undefined),
       }));
     }
 
@@ -312,18 +312,17 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
     try {
         let imagesUrl = [];
 
-        // Handle existing images
+        // Handle existing images (may be single value or array)
         if (existingImages) {
-            const existingImgsArray = Array.isArray(existingImages)
-                ? existingImages
-                : [existingImages];
+            const existingImgsArray = Array.isArray(existingImages) ? existingImages : [existingImages];
             imagesUrl = existingImgsArray;
         }
 
-        // Upload new images
-        if (files.length > 0) {
+        // Upload new images (expecting req.files.images when using upload.fields)
+        const imagesFiles = (req.files && req.files.images) || [];
+        if (imagesFiles.length > 0) {
             const newImageUrls = await Promise.all(
-                files.map((file) => {
+                imagesFiles.map((file) => {
                     return new Promise((resolve, reject) => {
                         if (!file.buffer) {
                             return reject(new Error("File buffer is undefined"));
@@ -343,9 +342,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
         }
 
         // Delete removed images from Cloudinary
-        const imagesToDelete = product.image.filter(
-            (img) => !imagesUrl.includes(img)
-        );
+        const imagesToDelete = (product.image || []).filter((img) => !imagesUrl.includes(img));
         await Promise.all(
             imagesToDelete.map(async (url) => {
                 try {
@@ -359,19 +356,23 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
             })
         );
 
-        // Parse description if it's a string
-        let parsedDescription = description;
-        if (typeof description === "string") {
-            try {
-                parsedDescription = JSON.parse(description);
-            } catch (e) {
-                parsedDescription = [description];
+        // Parse description only if provided
+        let parsedDescription;
+        if (description !== undefined) {
+            parsedDescription = description;
+            if (typeof description === "string") {
+                try {
+                    parsedDescription = JSON.parse(description);
+                } catch (e) {
+                    parsedDescription = [description];
+                }
             }
         }
 
-        // Parse sizes if it's a string
-        let parsedSizes = [];
-        if (sizes) {
+        // Parse sizes only if provided
+        let parsedSizes;
+        if (sizes !== undefined) {
+            parsedSizes = [];
             if (typeof sizes === "string") {
                 try {
                     parsedSizes = JSON.parse(sizes);
@@ -383,10 +384,10 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
             }
         }
 
-        // Parse colors if it's a string
-        let parsedColors = [];
-        if (req.body.colors || req.body.colors === "" ) {
-            const colorsInput = req.body.colors || "";
+        // Parse colors only if provided
+        let parsedColors;
+        if (req.body.colors !== undefined) {
+            const colorsInput = req.body.colors;
             if (typeof colorsInput === "string") {
                 try {
                     parsedColors = JSON.parse(colorsInput);
@@ -395,6 +396,8 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
                 }
             } else if (Array.isArray(colorsInput)) {
                 parsedColors = colorsInput;
+            } else {
+                parsedColors = [];
             }
         }
 
@@ -416,27 +419,38 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
                 })
             );
 
-            // map parsedColors images
-            parsedColors = parsedColors.map((c) => ({
-                name: c.name,
-                // Use uploaded URL when available; otherwise omit the image field so Joi won't validate a plain filename
-                image: colorMapping[c.image] ? colorMapping[c.image] : undefined,
-            }));
+            // If colors were sent, map their image field to uploaded url if it references a filename,
+            // and preserve existing URLs when no matching filename found.
+            if (parsedColors) {
+                parsedColors = parsedColors.map((c) => ({
+                    name: c.name,
+                    image: colorMapping[c.image] ? colorMapping[c.image] : (c.image || undefined),
+                }));
+            }
+        } else {
+            // No new color files uploaded: ensure parsedColors preserves existing image urls
+            if (parsedColors) {
+                parsedColors = parsedColors.map((c) => ({
+                    name: c.name,
+                    image: c.image || undefined,
+                }));
+            }
         }
+
+        // Build update fields only for provided data to avoid accidental overwrites
+        const updateFields = {};
+        if (name !== undefined) updateFields.name = name;
+        if (category !== undefined) updateFields.category = category;
+        if (price !== undefined) updateFields.price = price;
+        if (offerPrice !== undefined) updateFields.offerPrice = offerPrice;
+        if (parsedDescription !== undefined) updateFields.description = parsedDescription;
+        if (existingImages !== undefined || (req.files && req.files.images && req.files.images.length > 0)) updateFields.image = imagesUrl;
+        if (parsedSizes !== undefined) updateFields.sizes = parsedSizes;
+        if (parsedColors !== undefined) updateFields.colors = parsedColors;
+
         const updatedProduct = await Product.findByIdAndUpdate(
             id,
-            {
-                $set: {
-                    name,
-                    category,
-                    price,
-                    offerPrice,
-                    description: parsedDescription,
-                    image: imagesUrl,
-                    sizes: parsedSizes,
-                    colors: parsedColors,
-                },
-            },
+            { $set: updateFields },
             { new: true }
         );
 
