@@ -29,18 +29,37 @@ const Cart = () => {
     const getCart = () => {
         let tempArray = [];
         for (const key in cartItems) {
-            // Robust parsing: cartKey can be "productId" or "productId-size" where size may be arbitrary (numeric or text)
+            // Robust parsing: cartKey can be "productId", "productId-size", or "productId-size-color" or "productId-color"
             const parts = key.split("-");
             let productId = key; // default assume whole key is product id
             let size = null;
+            let color = null;
 
-            if (parts.length > 1) {
-                // candidate id is everything except the last part
-                const candidateId = parts.slice(0, -1).join("-");
+            if (parts.length > 2) {
+                // maybe productId-size-color
+                const candidateId = parts.slice(0, -2).join("-");
                 const candidateProduct = products.find((item) => item._id === candidateId);
                 if (candidateProduct) {
                     productId = candidateId;
-                    size = parts.slice(-1)[0];
+                    size = parts[parts.length - 2];
+                    color = parts[parts.length - 1];
+                }
+            }
+
+            if (productId === key && parts.length === 2) {
+                // could be productId-size OR productId-color
+                const candidateId = parts[0];
+                const candidateProduct = products.find((item) => item._id === candidateId);
+                if (candidateProduct) {
+                    productId = candidateId;
+                    const last = parts[1];
+                    // decide if last is size or color heuristically
+                    const sizeOptions = ["S", "M", "L", "XL", "XXL", "XXXL"];
+                    if (sizeOptions.includes(last) || last.match(/^(UK|US)_\d+$/) || last.match(/^\d+$/)) {
+                        size = last;
+                    } else {
+                        color = last;
+                    }
                 }
             }
 
@@ -55,6 +74,7 @@ const Cart = () => {
                 cartItem.quantity = cartItems[key];
                 cartItem.cartKey = key;
                 cartItem.size = size;
+                cartItem.color = color;
                 tempArray.push(cartItem);
             }
         }
@@ -102,6 +122,7 @@ const Cart = () => {
                         product: item._id,
                         quantity: item.quantity,
                         size: item.size || null,
+                        color: item.color || null,
                     })),
                     address: selectedAddress._id,
                 });
@@ -118,6 +139,7 @@ const Cart = () => {
                         product: item._id,
                         quantity: item.quantity,
                         size: item.size || null,
+                        color: item.color || null,
                     })),
                     address: selectedAddress._id,
                 });
@@ -202,9 +224,23 @@ const Cart = () => {
                                 </p>
                                 <div className="font-normal text-gray-500/70">
                                     {product.size && (
-                                        <div className="flex items-center">
+                                        <div className="flex items-center mr-4">
                                             <p>Size:</p>
                                             <span className="ml-2 font-medium">{String(product.size).replace("_", " ")}</span>
+                                        </div>
+                                    )}
+                                    {product.color && (
+                                        <div className="flex items-center">
+                                            <p>Color:</p>
+                                            <span className="ml-2 font-medium flex items-center gap-2">
+                                                {/* try to resolve image from product.colors */}
+                                                {product.colors && product.colors.find(c => c.name === product.color)?.image ? (
+                                                    <img src={product.colors.find(c => c.name === product.color).image} alt={product.color} className="w-5 h-5 rounded-full object-cover" />
+                                                ) : (
+                                                    <span className="inline-block w-5 h-5 bg-gray-200 rounded-full" />
+                                                )}
+                                                <span>{String(product.color).replace("_", " ")}</span>
+                                            </span>
                                         </div>
                                     )}
                                     <div className="flex items-center">

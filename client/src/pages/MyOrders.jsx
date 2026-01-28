@@ -82,6 +82,9 @@ const MyOrders = () => {
                                     {item.size && (
                                         <p>Size: <span className="font-medium text-gray-800">{item.size}</span></p>
                                     )}
+                                    {item.color && (
+                                        <p>Color: <span className="font-medium text-gray-800">{String(item.color).replace("_"," ")}</span></p>
+                                    )}
                                     <p>Status: {order.status}</p>
                                     <p>
                                         Date:{" "}

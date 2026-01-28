@@ -12,6 +12,7 @@ const ProductDetails = () => {
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [thumbnail, setThumbnail] = useState(null);
     const [selectedSize, setSelectedSize] = useState(null);
+    const [selectedColor, setSelectedColor] = useState(null);
 
     const product = products.find((item) => item._id === id);
 
@@ -32,14 +33,22 @@ const ProductDetails = () => {
     const handleAddToCart = (goToCart = false) => {
         const isClothingCategory = product.category === "Mens-Clothing" || product.category === "Womens-Clothing" || product.category === "Kids-Clothing";
         
+        // Validate color if applicable
+        if (product.colors && product.colors.length > 0) {
+            if (!selectedColor) {
+                toast.error("Please select Color to continue");
+                return;
+            }
+        }
+
         if (isClothingCategory && product.sizes && product.sizes.length > 0) {
             if (!selectedSize) {
                 toast.error("Please select Size to continue");
                 return;
             }
-            addToCart(product._id, selectedSize);
+            addToCart(product._id, selectedSize, selectedColor);
         } else {
-            addToCart(product._id, null);
+            addToCart(product._id, null, selectedColor);
         }
         
         if (goToCart) {
@@ -126,28 +135,58 @@ const ProductDetails = () => {
                             ))}
                         </ul>
 
-                        {(product.category === "Mens-Clothing" || product.category === "Womens-Clothing" || product.category === "Kids-Clothing") && product.sizes && product.sizes.length > 0 && (
-                            <div className="mt-6">
-                                <p className="text-base font-medium mb-2">Available Sizes</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {Array.from(new Set(product.sizes)).map((size, index) => {
-                                        const display = String(size).replace("_", " ");
-                                        return (
-                                            <button
-                                                key={index}
-                                                onClick={() => setSelectedSize(size)}
-                                                className={`border-2 rounded px-4 py-2 text-sm font-medium transition cursor-pointer ${
-                                                    selectedSize === size
-                                                        ? "border-primary bg-primary text-white"
-                                                        : "border-gray-300 hover:border-primary"
-                                                }`}
-                                            >
-                                                {display}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                        {(product.category === "Mens-Clothing" || product.category === "Womens-Clothing" || product.category === "Kids-Clothing") && (
+                            <>
+                                {product.colors && product.colors.length > 0 && (
+                                    <div className="mt-6">
+                                        <p className="text-base font-medium mb-2">Available Colors</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {product.colors.map((c, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setSelectedColor(c.name)}
+                                                    title={c.name}
+                                                    className={`flex items-center gap-2 border-2 rounded px-3 py-2 text-sm font-medium transition cursor-pointer ${
+                                                        selectedColor === c.name
+                                                            ? "border-primary bg-primary text-white"
+                                                            : "border-gray-300 hover:border-primary"
+                                                    }`}>
+                                                    {c.image ? (
+                                                        <img src={c.image} alt={c.name} className="w-6 h-6 object-cover rounded-full" />
+                                                    ) : (
+                                                        <span className="inline-block w-6 h-6 bg-gray-300 rounded-full"></span>
+                                                    )}
+                                                    <span>{c.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {product.sizes && product.sizes.length > 0 && (
+                                    <div className="mt-6">
+                                        <p className="text-base font-medium mb-2">Available Sizes</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Array.from(new Set(product.sizes)).map((size, index) => {
+                                                const display = String(size).replace("_", " ");
+                                                return (
+                                                    <button
+                                                        key={index}
+                                                        onClick={() => setSelectedSize(size)}
+                                                        className={`border-2 rounded px-4 py-2 text-sm font-medium transition cursor-pointer ${
+                                                            selectedSize === size
+                                                                ? "border-primary bg-primary text-white"
+                                                                : "border-gray-300 hover:border-primary"
+                                                        }`}
+                                                    >
+                                                        {display}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         <div className="flex items-center mt-10 gap-4 text-base">

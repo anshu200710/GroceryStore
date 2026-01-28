@@ -27,6 +27,11 @@ const ProductList = () => {
     const [newImages, setNewImages] = useState([]);
     const [editSizeInput, setEditSizeInput] = useState("");
 
+    // Color edit states
+    const [editColorInput, setEditColorInput] = useState("");
+    const [editColorFile, setEditColorFile] = useState(null);
+    const [newColorFiles, setNewColorFiles] = useState([]);
+
     const normalizeSizeValue = (s) => {
         if (!s) return "";
         let v = s.trim().toUpperCase();
@@ -47,6 +52,15 @@ const ProductList = () => {
     const handleEditAddSize = () => {
         addEditSizesFromInput(editSizeInput);
         setEditSizeInput("");
+    };
+
+    const handleEditAddColor = () => {
+        const name = editColorInput.trim();
+        if (!name) return;
+        setEditFormData((prev) => ({ ...prev, colors: [...(prev.colors || []), { name, image: editColorFile ? editColorFile.name : null }] }));
+        if (editColorFile) setNewColorFiles((prev) => [...prev, editColorFile]);
+        setEditColorInput("");
+        setEditColorFile(null);
     };
 
     const handleEditSizeKeyDown = (e) => {
@@ -101,6 +115,7 @@ const ProductList = () => {
             description: product.description?.join("\n") || "",
             images: product.image || [],
             sizes: product.sizes || [],
+            colors: product.colors || [],
         });
         setNewImages([]);
         setShowEditModal(true);
@@ -162,6 +177,7 @@ const ProductList = () => {
                 .filter((line) => line.trim() !== "");
             formData.append("description", JSON.stringify(descriptionArray));
             formData.append("sizes", JSON.stringify(editFormData.sizes));
+            formData.append("colors", JSON.stringify(editFormData.colors));
             
             // Append existing images
             editFormData.images.forEach((img) => {
@@ -173,6 +189,11 @@ const ProductList = () => {
                 formData.append("images", file);
             });
 
+            // Append new color swatch files
+            newColorFiles.forEach((file) => {
+                formData.append("colorImages", file);
+            });
+
             const { data } = await axios.patch(`/product/${editingProduct._id}`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -182,8 +203,9 @@ const ProductList = () => {
                 toast.success(data.message);
                 fetchProducts();
                 setShowEditModal(false);
-                setEditingProduct(null);
-            }
+                setEditingProduct(null);                setNewImages([]);
+                setNewColorFiles([]);
+                setEditColorFile(null);            }
         } catch (error) {
             toast.error(
                 error.response?.data?.message || "Failed to update product"
@@ -516,6 +538,42 @@ const ProductList = () => {
                                         {(editFormData.sizes || []).length === 0 && (
                                             <p className="text-gray-500/70">No sizes added yet</p>
                                         )}
+                                    </div>
+
+                                    {/* Color Variants */}
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Color Variants</label>
+                                        <p className="text-xs text-gray-500">Add color name and optionally upload a swatch image.</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <input
+                                                value={editColorInput}
+                                                onChange={(e) => setEditColorInput(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleEditAddColor(); } }}
+                                                placeholder="Color name (e.g., Red, Navy)"
+                                                className="outline-none py-2 px-3 rounded border border-gray-300 flex-1"
+                                            />
+                                            <label className="px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer">
+                                                <input type="file" accept="image/*" onChange={(e) => setEditColorFile(e.target.files[0])} hidden />
+                                                Upload
+                                            </label>
+                                            <button type="button" onClick={handleEditAddColor} className="px-4 py-2 bg-primary text-white rounded">Add</button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            {(editFormData.colors || []).map((c) => (
+                                                <div key={c.name} className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm">
+                                                    {c.image ? (
+                                                        <img src={c.image} alt={c.name} className="w-6 h-6 object-cover rounded-full" />
+                                                    ) : (
+                                                        <span className="inline-block w-6 h-6 bg-gray-300 rounded-full"></span>
+                                                    )}
+                                                    <span>{c.name}</span>
+                                                    <button type="button" onClick={() => removeEditColor(c.name)} className="text-gray-500 hover:text-red-500">×</button>
+                                                </div>
+                                            ))}
+                                            {(editFormData.colors || []).length === 0 && (
+                                                <p className="text-gray-500/70">No colors added yet</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             )}

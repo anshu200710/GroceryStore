@@ -93,10 +93,12 @@ export const AppContextProvider = ({ children }) => {
         }
     }, [cartItems]);
 
-    // Add Product to Cart with Size
-    const addToCart = (itemId, size = null) => {
+    // Add Product to Cart with Size and Color
+    const addToCart = (itemId, size = null, color = null) => {
         let cartData = structuredClone(cartItems);
-        const cartKey = size ? `${itemId}-${size}` : itemId;
+        let cartKey = itemId;
+        if (size) cartKey += `-${size}`;
+        if (color) cartKey += `-${color}`;
 
         if (cartData[cartKey]) {
             cartData[cartKey] += 1;

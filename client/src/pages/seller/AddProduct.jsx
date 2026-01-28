@@ -50,6 +50,24 @@ const AddProduct = () => {
 
     const removeSize = (size) => {
         setSelectedSizes(selectedSizes.filter((s) => s !== size));
+    };
+
+    // Color variant states
+    const [selectedColors, setSelectedColors] = useState([]); // { name, image (string or null), file }
+    const [colorNameInput, setColorNameInput] = useState("");
+    const [colorFile, setColorFile] = useState(null);
+
+    const handleAddColor = () => {
+        const name = colorNameInput.trim();
+        if (!name) return;
+        const imagePlaceholder = colorFile ? colorFile.name : null;
+        setSelectedColors([...selectedColors, { name, image: imagePlaceholder, file: colorFile }]);
+        setColorNameInput("");
+        setColorFile(null);
+    };
+
+    const removeColor = (name) => {
+        setSelectedColors(selectedColors.filter((c) => c.name !== name));
     }; 
 
     const onSubmitHandler = async (event) => {
@@ -64,6 +82,7 @@ const AddProduct = () => {
                 price,
                 offerPrice,
                 sizes: selectedSizes,
+                colors: selectedColors.map((c) => ({ name: c.name, image: c.image })),
             };
 
             const formData = new FormData();
@@ -71,6 +90,14 @@ const AddProduct = () => {
 
             for (let i = 0; i < files.length; i++) {
                 formData.append("images", files[i]);
+            }
+
+            // append color swatch files
+            for (let i = 0; i < selectedColors.length; i++) {
+                const c = selectedColors[i];
+                if (c.file) {
+                    formData.append("colorImages", c.file);
+                }
             }
 
             const { data } = await axios.post("/product/add", formData, {
@@ -88,6 +115,7 @@ const AddProduct = () => {
                 setOfferPrice("");
                 setFiles([]);
                 setSelectedSizes([]);
+                setSelectedColors([]);
             }
         } catch (error) {
             if (error.response && error.response.data) {
@@ -260,6 +288,43 @@ const AddProduct = () => {
                             {selectedSizes.length === 0 && (
                                 <p className="text-gray-500/70">No sizes added yet</p>
                             )}
+                        </div>
+
+                        {/* Color Variants */}
+                        <div className="mt-6">
+                            <label className="text-base font-medium">Color Variants</label>
+                            <p className="text-xs text-gray-500 mt-1">Add color name and optionally upload a swatch image.</p>
+                            <div className="flex items-center gap-2 mt-2">
+                                <input
+                                    value={colorNameInput}
+                                    onChange={(e) => setColorNameInput(e.target.value)}
+                                    placeholder="Color name (e.g., Red, Navy)"
+                                    className="outline-none py-2 px-3 rounded border border-gray-500/40 flex-1"
+                                />
+                                <label className="px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer">
+                                    <input type="file" accept="image/*" onChange={(e) => setColorFile(e.target.files[0])} hidden />
+                                    Upload
+                                </label>
+                                <button type="button" onClick={handleAddColor} className="px-4 py-2 bg-primary text-white rounded">Add</button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {selectedColors.map((c) => (
+                                    <div key={c.name} className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm">
+                                        {c.file ? (
+                                            <img src={URL.createObjectURL(c.file)} alt={c.name} className="w-6 h-6 object-cover rounded-full" />
+                                        ) : c.image ? (
+                                            <img src={c.image} alt={c.name} className="w-6 h-6 object-cover rounded-full" />
+                                        ) : (
+                                            <span className="inline-block w-6 h-6 bg-gray-300 rounded-full"></span>
+                                        )}
+                                        <span>{c.name}</span>
+                                        <button type="button" onClick={() => removeColor(c.name)} className="text-gray-500 hover:text-red-500">×</button>
+                                    </div>
+                                ))}
+                                {selectedColors.length === 0 && (
+                                    <p className="text-gray-500/70">No colors added yet</p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

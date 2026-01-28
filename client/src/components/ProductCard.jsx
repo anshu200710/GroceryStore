@@ -67,12 +67,9 @@ const ProductCard = ({ product }) => {
                                 <button
                                     className="flex items-center justify-center gap-1 bg-primary/10 border border-primary/40 md:w-[80px] w-[64px] h-[34px] rounded cursor-pointer"
                                     onClick={() => {
-                                        const isClothingCategory = 
-                                            product.category === "Mens-Clothing" || 
-                                            product.category === "Womens-Clothing" || 
-                                            product.category === "Kids-Clothing";
+                                        const requiresSelection = (product.sizes && product.sizes.length > 0) || (product.colors && product.colors.length > 0);
                                         
-                                        if (isClothingCategory && product.sizes && product.sizes.length > 0) {
+                                        if (requiresSelection) {
                                             navigate(
                                                 `products/${product.category.toLowerCase()}/${product._id}`
                                             );
