@@ -75,6 +75,93 @@ const AddProduct = () => {
             event.preventDefault();
             setLoading(true);
 
+            // Direct-to-Cloudinary flow: upload files to Cloudinary first, then send small JSON to server
+            const uploadSignatureResp = await axios.get("/product/upload/sign");
+            const { signature, timestamp, apiKey, cloudName } = uploadSignatureResp.data;
+
+            const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+            const compressImage = async (file, maxWidth = 1600, maxHeight = 1600, quality = 0.85) => {
+                // use createImageBitmap for better performance
+                const imageBitmap = await createImageBitmap(file);
+                let { width, height } = imageBitmap;
+                const ratio = Math.min(1, Math.min(maxWidth / width, maxHeight / height));
+                const targetWidth = Math.round(width * ratio);
+                const targetHeight = Math.round(height * ratio);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(imageBitmap, 0, 0, targetWidth, targetHeight);
+
+                const blob = await new Promise((resolve) => canvas.toBlob(resolve, file.type || 'image/jpeg', quality));
+                const compressed = new File([blob], file.name, { type: blob.type });
+                return compressed;
+            };
+
+            const uploadToCloudinary = async (file) => {
+                let f = file;
+
+                // If file is too large, attempt progressive compression
+                if (f.size > MAX_FILE_SIZE) {
+                    let q = 0.85;
+                    for (let i = 0; i < 4 && f.size > MAX_FILE_SIZE; i++) {
+                        f = await compressImage(f, 1600, 1600, q);
+                        q = Math.max(0.4, q - 0.15);
+                    }
+                } else if (f.size > 500 * 1024) {
+                    // moderate compression for medium files
+                    f = await compressImage(f, 2000, 2000, 0.9);
+                }
+
+                if (f.size > MAX_FILE_SIZE) {
+                    throw new Error('File too large after compression (max 10MB)');
+                }
+
+                const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+                const fd = new FormData();
+                fd.append("file", f);
+                fd.append("timestamp", timestamp);
+                fd.append("signature", signature);
+                fd.append("api_key", apiKey);
+                const res = await fetch(url, { method: "POST", body: fd });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error?.message || "Upload failed");
+                return json.secure_url;
+            };
+
+            // upload images
+            const imagesUrls = [];
+            for (let i = 0; i < files.length; i++) {
+                if (!files[i]) continue;
+                try {
+                    const url = await uploadToCloudinary(files[i]);
+                    imagesUrls.push(url);
+                } catch (err) {
+                    toast.error(`Image upload failed: ${err.message}`);
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // upload color swatches where provided
+            const colorsPayload = [];
+            for (let i = 0; i < selectedColors.length; i++) {
+                const c = selectedColors[i];
+                let imageUrl = c.image || null;
+                if (c.file) {
+                    try {
+                        imageUrl = await uploadToCloudinary(c.file);
+                    } catch (err) {
+                        toast.error(`Color swatch upload failed for ${c.name}: ${err.message}`);
+                        setLoading(false);
+                        return;
+                    }
+                }
+                colorsPayload.push({ name: c.name, image: imageUrl });
+            }
+
             const productData = {
                 name,
                 description: description.split("\n"),
@@ -82,29 +169,11 @@ const AddProduct = () => {
                 price,
                 offerPrice,
                 sizes: selectedSizes,
-                colors: selectedColors.map((c) => ({ name: c.name, image: c.image })),
+                colors: colorsPayload,
+                image: imagesUrls,
             };
 
-            const formData = new FormData();
-            formData.append("productData", JSON.stringify(productData));
-
-            for (let i = 0; i < files.length; i++) {
-                formData.append("images", files[i]);
-            }
-
-            // append color swatch files
-            for (let i = 0; i < selectedColors.length; i++) {
-                const c = selectedColors[i];
-                if (c.file) {
-                    formData.append("colorImages", c.file);
-                }
-            }
-
-            const { data } = await axios.post("/product/add", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const { data } = await axios.post("/product/add-direct", productData);
 
             if (data.success) {
                 toast.success(data.message);

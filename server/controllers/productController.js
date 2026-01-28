@@ -118,6 +118,71 @@ export const addProduct = asyncHandler(async (req, res, next) => {
   }
 });
 
+// New endpoint: direct add where images are already hosted (array of URLs in productData.image)
+export const addProductDirect = asyncHandler(async (req, res, next) => {
+  try {
+    const productData = req.body;
+
+    // Validate directly
+    const { error } = productValidationSchema.validate(productData, { convert: true });
+    if (error) {
+      const message = `The field '${error.details[0].context.key}' is missing or invalid. Please provide a valid value.`;
+      return next(new CustomError(400, message));
+    }
+
+    const newProduct = await Product.create(productData);
+
+    res.status(201).json({ success: true, message: "Product added successfully", newProduct });
+  } catch (err) {
+    next(new CustomError(500, err.message || "Error adding product"));
+  }
+});
+
+// New endpoint: direct update where images/colors are provided as URLs in JSON
+export const updateProductDirect = asyncHandler(async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const productData = req.body || {};
+
+    // Allow partial updates: make schema optional for required fields
+    const { error } = productValidationSchema.validate(productData, { convert: true, presence: 'optional' });
+    if (error) {
+      const message = `The field '${error.details[0].context.key}' is missing or invalid. Please provide a valid value.`;
+      return next(new CustomError(400, message));
+    }
+
+    const product = await Product.findById(id);
+    if (!product) return next(new CustomError(404, 'Product not found'));
+
+    // Prepare update object
+    const updateFields = {};
+    if (productData.name !== undefined) updateFields.name = productData.name;
+    if (productData.category !== undefined) updateFields.category = productData.category;
+    if (productData.price !== undefined) updateFields.price = productData.price;
+    if (productData.offerPrice !== undefined) updateFields.offerPrice = productData.offerPrice;
+    if (productData.image !== undefined) updateFields.image = productData.image;
+    if (productData.colors !== undefined) updateFields.colors = productData.colors;
+
+    if (productData.description !== undefined) {
+      updateFields.description = Array.isArray(productData.description)
+        ? productData.description
+        : typeof productData.description === 'string'
+        ? [productData.description]
+        : productData.description;
+    }
+
+    if (productData.sizes !== undefined) {
+      updateFields.sizes = Array.isArray(productData.sizes) ? productData.sizes : [];
+    }
+
+    const updated = await Product.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
+
+    res.status(200).json({ success: true, message: 'Product updated successfully', updated });
+  } catch (err) {
+    next(new CustomError(500, err.message || 'Error updating product'));
+  }
+});
+
 
 // export const addProduct = asyncHandler(async (req, res, next) => {
 //     let productData;

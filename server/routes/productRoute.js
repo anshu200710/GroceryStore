@@ -8,7 +8,10 @@ import {
     getProductById,
     productList,
     updateProduct,
+    addProductDirect,
+    updateProductDirect,
 } from "../controllers/productController.js";
+import { getUploadSignature } from "../controllers/uploadController.js";
 
 const productRouter = Router();
 
@@ -22,6 +25,16 @@ productRouter.post(
     authorize,
     addProduct
 );
+// Direct (small JSON) product add after direct-to-cloud uploads
+productRouter.post(
+    "/add-direct",
+    authenticate,
+    authorize,
+    addProductDirect
+);
+// Signature endpoint for Cloudinary direct uploads
+productRouter.get("/upload/sign", authenticate, getUploadSignature);
+
 productRouter.get("/list", productList);
 productRouter.get("/:id", getProductById);
 productRouter.patch(
@@ -39,6 +52,14 @@ productRouter.patch(
         }
         updateProduct(req, res, next);
     }
+);
+
+// Direct update (images already hosted as URLs in payload)
+productRouter.patch(
+    "/:id/direct",
+    authenticate,
+    authorize,
+    updateProductDirect
 );
 productRouter.delete("/:id", authenticate, authorize, deleteProduct);
 
