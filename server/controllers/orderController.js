@@ -21,31 +21,27 @@ export const placeOrderCOD = asyncHandler(async (req, res, next) => {
     for (const item of items) {
         const product = await Product.findById(item.product);
         if (!product) {
-            return next(
-                new CustomError(404, `Product not found: ${item.product}`)
-            );
+            return next(new CustomError(404, `Product not found: ${item.product}`));
         }
 
         // If product defines colors, ensure item.color is provided and valid
         if (product.colors && product.colors.length > 0) {
             if (!item.color) {
-                return next(
-                    new CustomError(400, `Color selection is required for product: ${product._id}`)
-                );
+                return next(new CustomError(400, `Color selection is required for product: ${product._id}`));
             }
 
-            const colorExists = product.colors.some(
-                (c) => c.name === item.color
-            );
-
+            const colorExists = product.colors.some((c) => c.name === item.color);
             if (!colorExists) {
-                return next(
-                    new CustomError(400, `Invalid color selected for product: ${product._id}`)
-                );
+                return next(new CustomError(400, `Invalid color selected for product: ${product._id}`));
             }
         }
 
-        amount += product.offerPrice * item.quantity;
+        // Require unitPrice snapshot and validate it
+        if (item.unitPrice === undefined || item.unitPrice === null || isNaN(Number(item.unitPrice))) {
+            return next(new CustomError(400, `unitPrice is required and must be a number for product: ${product._id}`));
+        }
+        const unitPrice = Number(item.unitPrice);
+        amount += unitPrice * item.quantity;
     }
 
     // Add 2% tax
@@ -67,6 +63,7 @@ export const placeOrderCOD = asyncHandler(async (req, res, next) => {
     });
 });
 
+
 //! Place Order Stripe: /api/order/stripe
 
 export const placeOrderStripe = asyncHandler(async (req, res, next) => {
@@ -81,52 +78,48 @@ export const placeOrderStripe = asyncHandler(async (req, res, next) => {
     let productData = [];
 
     // Calculate Amount Using Items
-    let amount = 0;
+    let amountStripe = 0;
 
     for (const item of items) {
         const product = await Product.findById(item.product);
         if (!product) {
-            return next(
-                new CustomError(404, `Product not found: ${item.product}`)
-            );
+            return next(new CustomError(404, `Product not found: ${item.product}`));
         }
 
         // If product defines colors, ensure item.color is provided and valid
         if (product.colors && product.colors.length > 0) {
             if (!item.color) {
-                return next(
-                    new CustomError(400, `Color selection is required for product: ${product._id}`)
-                );
+                return next(new CustomError(400, `Color selection is required for product: ${product._id}`));
             }
 
-            const colorExists = product.colors.some(
-                (c) => c.name === item.color
-            );
-
+            const colorExists = product.colors.some((c) => c.name === item.color);
             if (!colorExists) {
-                return next(
-                    new CustomError(400, `Invalid color selected for product: ${product._id}`)
-                );
+                return next(new CustomError(400, `Invalid color selected for product: ${product._id}`));
             }
         }
 
+        // Require unitPrice snapshot for Stripe flow as well
+        if (item.unitPrice === undefined || item.unitPrice === null || isNaN(Number(item.unitPrice))) {
+            return next(new CustomError(400, `unitPrice is required and must be a number for product: ${product._id}`));
+        }
+        const unitPrice = Number(item.unitPrice);
         productData.push({
             name: product.name,
-            price: product.offerPrice,
+            price: unitPrice,
             quantity: item.quantity,
         });
 
-        amount += product.offerPrice * item.quantity;
+        amountStripe += unitPrice * item.quantity;
     }
 
     // Add 2% tax
-    const tax = Math.floor(amount * 0.02);
-    amount += tax;
+    const tax = Math.floor(amountStripe * 0.02);
+    amountStripe += tax;
 
     const newOrder = await Order.create({
         userId: req.user._id,
         items,
-        amount,
+        amount: amountStripe,
         address,
         paymentType: "Online",
     });

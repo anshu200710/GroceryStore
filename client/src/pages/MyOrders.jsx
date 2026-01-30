@@ -95,7 +95,7 @@ const MyOrders = () => {
                                 </div>
                                 <p className="text-primary text-lg font-medium">
                                     Amount: {currency}
-                                    {item.product.offerPrice * item.quantity}
+                                    {(item.unitPrice !== undefined && item.unitPrice !== null ? item.unitPrice : item.product.offerPrice) * item.quantity}
                                 </p>
                             </div>
                         ))}

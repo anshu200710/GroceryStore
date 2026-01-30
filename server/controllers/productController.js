@@ -5,6 +5,44 @@ import CustomError from "../utils/CustomError.js";
 import { productValidationSchema } from "./../utils/productValidation.js";
 import { Readable } from "stream";
 
+// Helper: normalize sizes input to array of objects {name, price, inStock, sku}
+// Accepts array of strings, array of objects, or JSON string. defaultPrice used when price missing.
+const normalizeSizes = (sizesInput, defaultPrice) => {
+  if (sizesInput === undefined || sizesInput === null) return undefined;
+  let arr = [];
+  if (typeof sizesInput === "string") {
+    try {
+      arr = JSON.parse(sizesInput);
+    } catch (e) {
+      // comma-separated or single string
+      arr = sizesInput.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+  } else if (Array.isArray(sizesInput)) {
+    arr = sizesInput;
+  } else {
+    return undefined;
+  }
+
+  return arr
+    .map((item) => {
+      if (typeof item === 'string') {
+        return {
+          name: item,
+          price: typeof defaultPrice === 'number' ? defaultPrice : undefined,
+        };
+      } else if (item && typeof item === 'object') {
+        return {
+          name: item.name,
+          price: item.price !== undefined ? Number(item.price) : (typeof defaultPrice === 'number' ? defaultPrice : undefined),
+          inStock: item.inStock !== undefined ? Boolean(item.inStock) : undefined,
+          sku: item.sku !== undefined ? String(item.sku) : undefined,
+        };
+      }
+      return null;
+    })
+    .filter((s) => s && s.name);
+};
+
 //! Add Product: /api/product/add
 
 export const addProduct = asyncHandler(async (req, res, next) => {
@@ -94,6 +132,10 @@ export const addProduct = asyncHandler(async (req, res, next) => {
       colors: parsedColors,
     };
 
+    // Normalize sizes to objects (use offerPrice or price as fallback)
+    const defaultSizePrice = finalPayload.offerPrice || finalPayload.price;
+    finalPayload.sizes = normalizeSizes(finalPayload.sizes, defaultSizePrice) || [];
+
     console.log("addProduct: finalPayload ->", JSON.stringify(finalPayload, null, 2));
 
     const { error: validationError } = productValidationSchema.validate(finalPayload, {
@@ -122,6 +164,9 @@ export const addProduct = asyncHandler(async (req, res, next) => {
 export const addProductDirect = asyncHandler(async (req, res, next) => {
   try {
     const productData = req.body;
+
+    // Normalize sizes to objects for compatibility (use offerPrice or price as fallback)
+    productData.sizes = normalizeSizes(productData.sizes, productData.offerPrice || productData.price) || [];
 
     // Validate directly
     const { error } = productValidationSchema.validate(productData, { convert: true });
@@ -172,7 +217,8 @@ export const updateProductDirect = asyncHandler(async (req, res, next) => {
     }
 
     if (productData.sizes !== undefined) {
-      updateFields.sizes = Array.isArray(productData.sizes) ? productData.sizes : [];
+      // Normalize sizes objects; use offerPrice or price from payload as fallback
+      updateFields.sizes = normalizeSizes(productData.sizes, productData.offerPrice || productData.price) || [];
     }
 
     const updated = await Product.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
@@ -369,19 +415,23 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
             }
         }
 
-        // Parse sizes only if provided
+        // Parse sizes only if provided, then normalize to objects
         let parsedSizes;
         if (sizes !== undefined) {
-            parsedSizes = [];
             if (typeof sizes === "string") {
                 try {
                     parsedSizes = JSON.parse(sizes);
                 } catch (e) {
+                    // fallback to empty
                     parsedSizes = [];
                 }
             } else if (Array.isArray(sizes)) {
                 parsedSizes = sizes;
             }
+
+            // Use product's pricing as default for size prices when not supplied
+            const defaultSizePrice = product.offerPrice || product.price;
+            parsedSizes = normalizeSizes(parsedSizes, defaultSizePrice) || [];
         }
 
         // Parse colors only if provided

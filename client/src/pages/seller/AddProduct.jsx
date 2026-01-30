@@ -4,7 +4,7 @@ import { useAppContext } from "./../../context/AppContext";
 import toast from "react-hot-toast";
 
 const AddProduct = () => {
-    const { axios } = useAppContext();
+    const { axios, currency } = useAppContext();
 
     const [files, setFiles] = useState([]);
     const [name, setName] = useState("");
@@ -13,8 +13,9 @@ const AddProduct = () => {
     const [price, setPrice] = useState("");
     const [offerPrice, setOfferPrice] = useState("");
     const [loading, setLoading] = useState(false);
-    const [selectedSizes, setSelectedSizes] = useState([]);
+    const [selectedSizes, setSelectedSizes] = useState([]); // array of { name, price }
     const [sizesInput, setSizesInput] = useState("");
+    const [sizePriceInput, setSizePriceInput] = useState("");
 
     const normalizeSizeValue = (s) => {
         if (!s) return "";
@@ -31,13 +32,20 @@ const AddProduct = () => {
             .split(",")
             .map((s) => normalizeSizeValue(s))
             .filter((s) => s !== "");
-        const unique = parts.filter((p) => !selectedSizes.includes(p));
-        if (unique.length) setSelectedSizes([...selectedSizes, ...unique]);
+        if (parts.length === 0) return;
+        const existingNames = (selectedSizes || []).map((s) => (typeof s === 'string' ? s : s.name));
+        const unique = parts.filter((p) => !existingNames.includes(p));
+        if (unique.length) {
+            const defaultPrice = Number(sizePriceInput) || Number(offerPrice) || Number(price) || undefined;
+            const newSizes = unique.map((name) => ({ name, price: defaultPrice }));
+            setSelectedSizes((prev) => [...(prev || []), ...newSizes]);
+        }
     };
 
     const handleAddSizeClick = () => {
         addSizesFromInput(sizesInput);
         setSizesInput("");
+        setSizePriceInput("");
     };
 
     const handleSizeKeyDown = (e) => {
@@ -45,12 +53,13 @@ const AddProduct = () => {
             e.preventDefault();
             addSizesFromInput(sizesInput);
             setSizesInput("");
+            setSizePriceInput("");
         }
     };
 
-    const removeSize = (size) => {
-        setSelectedSizes(selectedSizes.filter((s) => s !== size));
-    };
+    const removeSize = (sizeName) => {
+        setSelectedSizes((prev) => (prev || []).filter((s) => (typeof s === 'string' ? s : s.name) !== sizeName));
+    }; 
 
     // Color variant states
     const [selectedColors, setSelectedColors] = useState([]); // { name, image (string or null), file }
@@ -338,6 +347,13 @@ const AddProduct = () => {
                                 placeholder="Type and press Enter or click Add"
                                 className="outline-none py-2 px-3 rounded border border-gray-500/40 flex-1"
                             />
+                            <input
+                                value={sizePriceInput}
+                                onChange={(e) => setSizePriceInput(e.target.value)}
+                                type="number"
+                                placeholder="Price"
+                                className="outline-none py-2 px-3 rounded border border-gray-500/40 w-28"
+                            />
                             <button
                                 type="button"
                                 onClick={handleAddSizeClick}
@@ -348,12 +364,18 @@ const AddProduct = () => {
                         </div>
 
                         <div className="flex flex-wrap gap-2 mt-3">
-                            {selectedSizes.map((size) => (
-                                <span key={size} className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm">
-                                    <span>{size.replace("_"," ")}</span>
-                                    <button type="button" onClick={() => removeSize(size)} className="text-gray-500 hover:text-red-500">×</button>
-                                </span>
-                            ))}
+                            {selectedSizes.map((s, idx) => {
+                                const name = s ? (typeof s === 'string' ? s : s.name) : '';
+                                const priceVal = s && typeof s === 'object' && s.price !== undefined ? s.price : '';
+                                if (!name) return null; // skip invalid entries
+                                const display = String(name).replace("_"," ");
+                                return (
+                                    <span key={`${name}-${idx}`} className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm">
+                                        <span>{display}{priceVal !== '' && <span className="ml-2 text-xs text-gray-600">{currency}{priceVal}</span>}</span>
+                                        <button type="button" onClick={() => removeSize(name)} className="text-gray-500 hover:text-red-500">×</button>
+                                    </span>
+                                );
+                            })}
                             {selectedSizes.length === 0 && (
                                 <p className="text-gray-500/70">No sizes added yet</p>
                             )}

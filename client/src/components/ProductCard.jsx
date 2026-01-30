@@ -63,7 +63,7 @@ const ProductCard = ({ product }) => {
                             }}
                             className="text-primary"
                         >
-                            {!cartItems[product._id] ? (
+                            {(!cartItems[product._id] || (typeof cartItems[product._id] === 'object' && (cartItems[product._id].qty || 0) === 0) ) ? (
                                 <button
                                     className="flex items-center justify-center gap-1 bg-primary/10 border border-primary/40 md:w-[80px] w-[64px] h-[34px] rounded cursor-pointer"
                                     onClick={() => {
@@ -96,7 +96,7 @@ const ProductCard = ({ product }) => {
                                         -
                                     </button>
                                     <span className="w-5 text-center">
-                                        {cartItems[product._id]}
+                                        {typeof cartItems[product._id] === 'number' ? cartItems[product._id] : cartItems[product._id].qty}
                                     </span>
                                     <button
                                         onClick={() => addToCart(product._id)}

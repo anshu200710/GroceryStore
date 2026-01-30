@@ -26,6 +26,7 @@ const ProductList = () => {
     });
     const [newImages, setNewImages] = useState([]);
     const [editSizeInput, setEditSizeInput] = useState("");
+    const [editSizePrice, setEditSizePrice] = useState("");
 
     // Color edit states
     const [editColorInput, setEditColorInput] = useState("");
@@ -45,13 +46,23 @@ const ProductList = () => {
             .split(",")
             .map((s) => normalizeSizeValue(s))
             .filter((s) => s !== "");
-        const unique = parts.filter((p) => !(editFormData.sizes || []).includes(p));
-        if (unique.length) setEditFormData((prev) => ({ ...prev, sizes: [...(prev.sizes || []), ...unique] }));
+        if (parts.length === 0) return;
+        setEditFormData((prev) => {
+            const existingNames = (prev.sizes || []).map((s) => (typeof s === 'string' ? s : s.name));
+            const unique = parts.filter((p) => !existingNames.includes(p));
+            if (unique.length) {
+                const defaultPrice = Number(editSizePrice) || Number(prev.offerPrice) || Number(prev.price) || Number(editingProduct?.offerPrice) || Number(editingProduct?.price) || undefined;
+                const newSizes = unique.map((name) => ({ name, price: defaultPrice }));
+                return { ...prev, sizes: [...(prev.sizes || []), ...newSizes] };
+            }
+            return prev;
+        });
     };
 
     const handleEditAddSize = () => {
         addEditSizesFromInput(editSizeInput);
         setEditSizeInput("");
+        setEditSizePrice("");
     };
 
     const handleEditAddColor = () => {
@@ -68,11 +79,12 @@ const ProductList = () => {
             e.preventDefault();
             addEditSizesFromInput(editSizeInput);
             setEditSizeInput("");
+            setEditSizePrice("");
         }
     };
 
-    const removeEditSize = (size) => {
-        setEditFormData((prev) => ({ ...prev, sizes: (prev.sizes || []).filter((s) => s !== size) }));
+    const removeEditSize = (sizeName) => {
+        setEditFormData((prev) => ({ ...prev, sizes: (prev.sizes || []).filter((s) => (typeof s === 'string' ? s : s.name) !== sizeName) }));
     }; 
 
     // Remove a color by name and also remove any queued uploaded color file with same filename
@@ -124,7 +136,8 @@ const ProductList = () => {
             offerPrice: product.offerPrice,
             description: product.description?.join("\n") || "",
             images: product.image || [],
-            sizes: product.sizes || [],
+            // Normalize sizes: if stored as strings, convert to objects with default price
+            sizes: (product.sizes || []).map((s) => (typeof s === 'string' ? { name: s, price: product.offerPrice || product.price } : s)),
             colors: product.colors || [],
         });
         setNewImages([]);
@@ -536,15 +549,28 @@ const ProductList = () => {
                                             placeholder="Type and press Enter or click Add"
                                             className="outline-none py-2 px-3 rounded border border-gray-300 flex-1"
                                         />
+                                        <input
+                                            value={editSizePrice}
+                                            onChange={(e) => setEditSizePrice(e.target.value)}
+                                            type="number"
+                                            placeholder="Price"
+                                            className="outline-none py-2 px-3 rounded border border-gray-300 w-28"
+                                        />
                                         <button type="button" onClick={handleEditAddSize} className="px-4 py-2 bg-primary text-white rounded">Add</button>
                                     </div>
                                     <div className="flex flex-wrap gap-2 mt-3">
-                                        {(editFormData.sizes || []).map((size) => (
-                                            <span key={size} className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm">
-                                                <span>{size.replace("_"," ")}</span>
-                                                <button type="button" onClick={() => removeEditSize(size)} className="text-gray-500 hover:text-red-500">×</button>
-                                            </span>
-                                        ))}
+                                        {(editFormData.sizes || []).map((s, idx) => {
+                                            const name = s ? (typeof s === 'string' ? s : s.name) : '';
+                                            const priceVal = s && typeof s === 'object' && s.price !== undefined ? s.price : '';
+                                            if (!name) return null;
+                                            const display = String(name).replace("_"," ");
+                                            return (
+                                                <span key={`${name}-${idx}`} className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm">
+                                                    <span>{display}{priceVal !== '' && <span className="ml-2 text-xs text-gray-600">{currency}{priceVal}</span>}</span>
+                                                    <button type="button" onClick={() => removeEditSize(name)} className="text-gray-500 hover:text-red-500">×</button>
+                                                </span>
+                                            );
+                                        })}
                                         {(editFormData.sizes || []).length === 0 && (
                                             <p className="text-gray-500/70">No sizes added yet</p>
                                         )}

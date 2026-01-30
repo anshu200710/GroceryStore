@@ -93,17 +93,22 @@ export const AppContextProvider = ({ children }) => {
         }
     }, [cartItems]);
 
-    // Add Product to Cart with Size and Color
-    const addToCart = (itemId, size = null, color = null) => {
+    // Add Product to Cart with Size and Color and snapshot unit price
+    const addToCart = (itemId, size = null, color = null, sizePrice = null) => {
         let cartData = structuredClone(cartItems);
         let cartKey = itemId;
         if (size) cartKey += `-${size}`;
         if (color) cartKey += `-${color}`;
 
         if (cartData[cartKey]) {
-            cartData[cartKey] += 1;
+            // existing entry may be legacy number or object
+            if (typeof cartData[cartKey] === 'number') {
+                cartData[cartKey] = { qty: cartData[cartKey] + 1, productId: itemId, size, sizePrice, color };
+            } else {
+                cartData[cartKey].qty += 1;
+            }
         } else {
-            cartData[cartKey] = 1;
+            cartData[cartKey] = { qty: 1, productId: itemId, size, sizePrice, color };
         }
         setCartItems(cartData);
         toast.success("Added to Cart");
@@ -112,18 +117,27 @@ export const AppContextProvider = ({ children }) => {
     // Update Cart Item Quantity
     const updateCartItem = (itemId, quantity) => {
         let cartData = structuredClone(cartItems);
-        cartData[itemId] = quantity;
-        setCartItems(cartData);
-        toast.success("Cart Updated");
+        if (cartData[itemId]) {
+            if (typeof cartData[itemId] === 'number') {
+                cartData[itemId] = quantity;
+            } else {
+                cartData[itemId].qty = quantity;
+            }
+            setCartItems(cartData);
+            toast.success("Cart Updated");
+        }
     };
 
     // Remove Product from Cart
     const removeFromCart = (cartKey) => {
         let cartData = structuredClone(cartItems);
         if (cartData[cartKey]) {
-            cartData[cartKey] -= 1;
-            if (cartData[cartKey] === 0) {
-                delete cartData[cartKey];
+            if (typeof cartData[cartKey] === 'number') {
+                cartData[cartKey] -= 1;
+                if (cartData[cartKey] === 0) delete cartData[cartKey];
+            } else {
+                cartData[cartKey].qty -= 1;
+                if (cartData[cartKey].qty <= 0) delete cartData[cartKey];
             }
         }
         toast.success("Remove from Cart");
@@ -133,27 +147,46 @@ export const AppContextProvider = ({ children }) => {
     // Get Cart Item Count
     const getCartCount = () => {
         let totalCount = 0;
-        for (const item in cartItems) {
-            totalCount += cartItems[item];
+        for (const key in cartItems) {
+            const val = cartItems[key];
+            if (typeof val === 'number') totalCount += val;
+            else if (val && typeof val === 'object') totalCount += val.qty || 0;
         }
         return totalCount;
     };
 
-    // Get Cart Total Amount
+    // Get Cart Total Amount (respect per-size pricing if present)
     const getCartAmount = () => {
         let totalAmount = 0;
         for (const items in cartItems) {
-            // Extract product ID from cartKey (format: "productId" or "productId-size")
-            const productId = items.split("-").slice(0, -1).join("-") || items.split("-")[0];
-            let itemInfo = products.find((product) => product._id === productId || product._id === items);
-            
-            // Try to find by the original items key first (for backward compatibility)
+            const parts = items.split("-");
+            const productId = parts[0];
+            const sizePart = parts.length > 1 ? parts[1] : null;
+
+            let itemInfo = products.find((product) => product._id === productId);
             if (!itemInfo) {
+                // fallback for older keys
                 itemInfo = products.find((product) => product._id === items);
             }
-            
-            if (itemInfo && cartItems[items] > 0) {
-                totalAmount += itemInfo.offerPrice * cartItems[items];
+
+            if (itemInfo) {
+                let qty = 0;
+                let unitPrice = itemInfo.offerPrice;
+                const val = cartItems[items];
+                if (typeof val === 'number') {
+                    qty = val;
+                    // legacy: infer price from selected size in key
+                    if (sizePart) {
+                        const sizeObj = (itemInfo.sizes || []).find((s) => (typeof s === 'string' ? s : s.name) === sizePart);
+                        if (sizeObj && typeof sizeObj !== 'string' && sizeObj.price !== undefined) {
+                            unitPrice = Number(sizeObj.price);
+                        }
+                    }
+                } else if (val && typeof val === 'object') {
+                    qty = val.qty || 0;
+                    if (val.sizePrice !== undefined && val.sizePrice !== null) unitPrice = Number(val.sizePrice);
+                }
+                if (qty > 0) totalAmount += unitPrice * qty;
             }
         }
         return parseFloat(totalAmount.toFixed(2));

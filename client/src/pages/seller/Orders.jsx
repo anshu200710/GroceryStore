@@ -114,7 +114,7 @@ const Orders = () => {
                                                 <div className="text-gray-600 text-sm mt-1">
                                                     <p>Category: {item.product.category}</p>
                                                     {item.size && <p>Size: {String(item.size).replace("_"," ")}</p>}
-                                                    <p>Amount: {currency}{parseFloat((item.product.offerPrice * item.quantity).toFixed(2))}</p>
+                                                    <p>Amount: {currency}{parseFloat(((item.unitPrice !== undefined && item.unitPrice !== null ? item.unitPrice : item.product.offerPrice) * item.quantity).toFixed(2))}</p>
                                                 </div>
                                             </div>
                                         ))}

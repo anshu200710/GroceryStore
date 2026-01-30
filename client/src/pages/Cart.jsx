@@ -71,10 +71,19 @@ const Cart = () => {
 
             if (product) {
                 const cartItem = { ...product };
-                cartItem.quantity = cartItems[key];
-                cartItem.cartKey = key;
-                cartItem.size = size;
-                cartItem.color = color;
+                const val = cartItems[key];
+                if (typeof val === 'number') {
+                    cartItem.quantity = val;
+                    cartItem.unitPrice = product.offerPrice;
+                } else if (val && typeof val === 'object') {
+                    cartItem.quantity = val.qty || 0;
+                    cartItem.size = val.size || size;
+                    cartItem.color = val.color || color;
+                    cartItem.cartKey = key;
+                    cartItem.unitPrice = val.sizePrice !== undefined && val.sizePrice !== null ? Number(val.sizePrice) : product.offerPrice;
+                }
+                // ensure cartKey set for legacy numeric values
+                cartItem.cartKey = cartItem.cartKey || key;
                 tempArray.push(cartItem);
             }
         }
@@ -123,6 +132,7 @@ const Cart = () => {
                         quantity: item.quantity,
                         size: item.size || null,
                         color: item.color || null,
+                        unitPrice: item.unitPrice || item.offerPrice,
                     })),
                     address: selectedAddress._id,
                 });
@@ -140,6 +150,7 @@ const Cart = () => {
                         quantity: item.quantity,
                         size: item.size || null,
                         color: item.color || null,
+                        unitPrice: item.unitPrice || item.offerPrice,
                     })),
                     address: selectedAddress._id,
                 });
@@ -252,7 +263,7 @@ const Cart = () => {
                                                     Number(e.target.value)
                                                 )
                                             }
-                                            value={cartItems[product.cartKey]}
+                                            value={product.quantity}
                                             className="outline-none border border-gray-300 rounded px-2 py-1 ml-1"
                                         >
                                             {Array(
@@ -277,7 +288,7 @@ const Cart = () => {
                         <p className="text-center">
                             {currency}
                             {parseFloat(
-                                (product.offerPrice * product.quantity).toFixed(
+                                (product.unitPrice * product.quantity).toFixed(
                                     2
                                 )
                             )}
