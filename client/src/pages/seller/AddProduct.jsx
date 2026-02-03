@@ -13,9 +13,10 @@ const AddProduct = () => {
     const [price, setPrice] = useState("");
     const [offerPrice, setOfferPrice] = useState("");
     const [loading, setLoading] = useState(false);
-    const [selectedSizes, setSelectedSizes] = useState([]); // array of { name, price }
+    const [selectedSizes, setSelectedSizes] = useState([]); // array of { name, price, mrpPrice }
     const [sizesInput, setSizesInput] = useState("");
     const [sizePriceInput, setSizePriceInput] = useState("");
+    const [sizeMRPInput, setSizeMRPInput] = useState("");
 
     const normalizeSizeValue = (s) => {
         if (!s) return "";
@@ -37,7 +38,8 @@ const AddProduct = () => {
         const unique = parts.filter((p) => !existingNames.includes(p));
         if (unique.length) {
             const defaultPrice = Number(sizePriceInput) || Number(offerPrice) || Number(price) || undefined;
-            const newSizes = unique.map((name) => ({ name, price: defaultPrice }));
+            const defaultMRP = Number(sizeMRPInput) || Number(price) || undefined;
+            const newSizes = unique.map((name) => ({ name, price: defaultPrice, mrpPrice: defaultMRP }));
             setSelectedSizes((prev) => [...(prev || []), ...newSizes]);
         }
     };
@@ -46,6 +48,7 @@ const AddProduct = () => {
         addSizesFromInput(sizesInput);
         setSizesInput("");
         setSizePriceInput("");
+        setSizeMRPInput("");
     };
 
     const handleSizeKeyDown = (e) => {
@@ -54,6 +57,7 @@ const AddProduct = () => {
             addSizesFromInput(sizesInput);
             setSizesInput("");
             setSizePriceInput("");
+            setSizeMRPInput("");
         }
     };
 
@@ -348,6 +352,13 @@ const AddProduct = () => {
                                 className="outline-none py-2 px-3 rounded border border-gray-500/40 flex-1"
                             />
                             <input
+                                value={sizeMRPInput}
+                                onChange={(e) => setSizeMRPInput(e.target.value)}
+                                type="number"
+                                placeholder="MRP"
+                                className="outline-none py-2 px-3 rounded border border-gray-500/40 w-24"
+                            />
+                            <input
                                 value={sizePriceInput}
                                 onChange={(e) => setSizePriceInput(e.target.value)}
                                 type="number"
@@ -367,11 +378,12 @@ const AddProduct = () => {
                             {selectedSizes.map((s, idx) => {
                                 const name = s ? (typeof s === 'string' ? s : s.name) : '';
                                 const priceVal = s && typeof s === 'object' && s.price !== undefined ? s.price : '';
+                                const mrpVal = s && typeof s === 'object' && s.mrpPrice !== undefined ? s.mrpPrice : '';
                                 if (!name) return null; // skip invalid entries
                                 const display = String(name).replace("_"," ");
                                 return (
                                     <span key={`${name}-${idx}`} className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm">
-                                        <span>{display}{priceVal !== '' && <span className="ml-2 text-xs text-gray-600">{currency}{priceVal}</span>}</span>
+                                        <span>{display}{(mrpVal !== '' || priceVal !== '') && <span className="ml-2 text-xs text-gray-600">{mrpVal !== '' && `MRP: ${currency}${mrpVal}`}{mrpVal !== '' && priceVal !== '' && ' | '}{priceVal !== '' && `${currency}${priceVal}`}</span>}</span>
                                         <button type="button" onClick={() => removeSize(name)} className="text-gray-500 hover:text-red-500">×</button>
                                     </span>
                                 );

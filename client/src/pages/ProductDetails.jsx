@@ -14,6 +14,7 @@ const ProductDetails = () => {
     const [selectedSizeName, setSelectedSizeName] = useState(null);
     const [selectedSizePrice, setSelectedSizePrice] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
+    const [selectedSizeMRP, setSelectedSizeMRP] = useState(null);
 
     const product = products.find((item) => item._id === id);
 
@@ -35,11 +36,14 @@ const ProductDetails = () => {
             const single = Array.isArray(product.sizes[0]) ? product.sizes[0] : product.sizes[0];
             const sName = typeof single === 'string' ? single : single.name;
             const sPrice = typeof single === 'object' ? single.price : undefined;
+            const sMRP = typeof single === 'object' ? single.mrpPrice : undefined;
             setSelectedSizeName(sName);
             setSelectedSizePrice(sPrice !== undefined ? sPrice : null);
+            setSelectedSizeMRP(sMRP !== undefined ? sMRP : null);
         } else {
             setSelectedSizeName(null);
             setSelectedSizePrice(null);
+            setSelectedSizeMRP(null);
         }
     }, [product]);
 
@@ -102,8 +106,8 @@ const ProductDetails = () => {
                     <h1 className="text-3xl font-medium">{product.name}</h1>
 
                     <div className="mt-6">
-                        <p className="text-gray-500/70 line-through">MRP: {currency}{product.price}</p>
-                        <p className="text-2xl font-medium">MRP: {currency}{selectedSizePrice ?? product.offerPrice}</p>
+                        <p className="text-gray-500/70 line-through">MRP: {currency}{selectedSizeMRP ?? product.price}</p>
+                        <p className="text-2xl font-medium">Offer Price: {currency}{selectedSizePrice ?? product.offerPrice}</p>
                         <span className="text-gray-500/70">(inclusive of all taxes)</span>
                     </div>
 
@@ -165,7 +169,11 @@ const ProductDetails = () => {
                                                 return (
                                                     <button
                                                         key={idx}
-                                                        onClick={() => { setSelectedSizeName(opt.name); setSelectedSizePrice(opt.price !== undefined ? opt.price : null); }}
+                                                        onClick={() => { 
+                                                            setSelectedSizeName(opt.name); 
+                                                            setSelectedSizePrice(opt.price !== undefined ? opt.price : null);
+                                                            setSelectedSizeMRP(opt.mrpPrice !== undefined ? opt.mrpPrice : null);  // NEW
+                                                        }}
                                                         className={`border-2 rounded px-4 py-2 text-sm font-medium transition cursor-pointer ${
                                                             selectedSizeName === opt.name
                                                                 ? "border-primary bg-primary text-white"

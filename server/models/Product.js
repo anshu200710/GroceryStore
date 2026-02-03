@@ -10,14 +10,13 @@ const productSchema = new mongoose.Schema(
         category: { type: String, required: true },
         inStock: { type: Boolean, default: true },
         sizes: {
-            type: [
-                {
-                    name: { type: String, trim: true },
-                    price: { type: Number },
-                    inStock: { type: Boolean, default: true },
-                    sku: { type: String },
-                },
-            ],
+            type: [{
+                name: { type: String, trim: true },
+                price: { type: Number },        // offer price
+                mrpPrice: { type: Number },     // NEW: MRP for this size
+                inStock: { type: Boolean, default: true },
+                sku: { type: String },
+            }],
             default: [],
         },
         colors: {

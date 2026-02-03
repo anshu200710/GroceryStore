@@ -5,7 +5,7 @@ import CustomError from "../utils/CustomError.js";
 import { productValidationSchema } from "./../utils/productValidation.js";
 import { Readable } from "stream";
 
-// Helper: normalize sizes input to array of objects {name, price, inStock, sku}
+// Helper: normalize sizes input to array of objects {name, price, mrpPrice, inStock, sku}
 // Accepts array of strings, array of objects, or JSON string. defaultPrice used when price missing.
 const normalizeSizes = (sizesInput, defaultPrice) => {
   if (sizesInput === undefined || sizesInput === null) return undefined;
@@ -34,6 +34,7 @@ const normalizeSizes = (sizesInput, defaultPrice) => {
         return {
           name: item.name,
           price: item.price !== undefined ? Number(item.price) : (typeof defaultPrice === 'number' ? defaultPrice : undefined),
+          mrpPrice: item.mrpPrice !== undefined ? Number(item.mrpPrice) : undefined,
           inStock: item.inStock !== undefined ? Boolean(item.inStock) : undefined,
           sku: item.sku !== undefined ? String(item.sku) : undefined,
         };

@@ -27,6 +27,7 @@ const ProductList = () => {
     const [newImages, setNewImages] = useState([]);
     const [editSizeInput, setEditSizeInput] = useState("");
     const [editSizePrice, setEditSizePrice] = useState("");
+    const [editSizeMRP, setEditSizeMRP] = useState("");
 
     // Color edit states
     const [editColorInput, setEditColorInput] = useState("");
@@ -52,7 +53,8 @@ const ProductList = () => {
             const unique = parts.filter((p) => !existingNames.includes(p));
             if (unique.length) {
                 const defaultPrice = Number(editSizePrice) || Number(prev.offerPrice) || Number(prev.price) || Number(editingProduct?.offerPrice) || Number(editingProduct?.price) || undefined;
-                const newSizes = unique.map((name) => ({ name, price: defaultPrice }));
+                const defaultMRP = Number(editSizeMRP) || Number(prev.price) || Number(editingProduct?.price) || undefined;
+                const newSizes = unique.map((name) => ({ name, price: defaultPrice, mrpPrice: defaultMRP }));
                 return { ...prev, sizes: [...(prev.sizes || []), ...newSizes] };
             }
             return prev;
@@ -63,6 +65,7 @@ const ProductList = () => {
         addEditSizesFromInput(editSizeInput);
         setEditSizeInput("");
         setEditSizePrice("");
+        setEditSizeMRP("");
     };
 
     const handleEditAddColor = () => {
@@ -80,6 +83,7 @@ const ProductList = () => {
             addEditSizesFromInput(editSizeInput);
             setEditSizeInput("");
             setEditSizePrice("");
+            setEditSizeMRP("");
         }
     };
 
@@ -550,6 +554,13 @@ const ProductList = () => {
                                             className="outline-none py-2 px-3 rounded border border-gray-300 flex-1"
                                         />
                                         <input
+                                            value={editSizeMRP}
+                                            onChange={(e) => setEditSizeMRP(e.target.value)}
+                                            type="number"
+                                            placeholder="MRP"
+                                            className="outline-none py-2 px-3 rounded border border-gray-300 w-24"
+                                        />
+                                        <input
                                             value={editSizePrice}
                                             onChange={(e) => setEditSizePrice(e.target.value)}
                                             type="number"
@@ -562,11 +573,12 @@ const ProductList = () => {
                                         {(editFormData.sizes || []).map((s, idx) => {
                                             const name = s ? (typeof s === 'string' ? s : s.name) : '';
                                             const priceVal = s && typeof s === 'object' && s.price !== undefined ? s.price : '';
+                                            const mrpVal = s && typeof s === 'object' && s.mrpPrice !== undefined ? s.mrpPrice : '';
                                             if (!name) return null;
                                             const display = String(name).replace("_"," ");
                                             return (
                                                 <span key={`${name}-${idx}`} className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded px-3 py-1 text-sm">
-                                                    <span>{display}{priceVal !== '' && <span className="ml-2 text-xs text-gray-600">{currency}{priceVal}</span>}</span>
+                                                    <span>{display}{(mrpVal !== '' || priceVal !== '') && <span className="ml-2 text-xs text-gray-600">{mrpVal !== '' && `MRP: ${currency}${mrpVal}`}{mrpVal !== '' && priceVal !== '' && ' | '}{priceVal !== '' && `${currency}${priceVal}`}</span>}</span>
                                                     <button type="button" onClick={() => removeEditSize(name)} className="text-gray-500 hover:text-red-500">×</button>
                                                 </span>
                                             );
